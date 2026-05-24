@@ -3,12 +3,10 @@ import { useState, useRef } from "react";
 import { motion, useInView, AnimatePresence } from "framer-motion";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image"; // ✅ Import Next.js Image
 import Navbar from "@/components/ui/Navbar";
 import Footer from "@/components/ui/Footer";
 import { KRIOSK_PROJECTS, KrioskProject } from "@/data/projectsData";
-
-// ── Category filter options ────────────────────────────────────────────────
-//const CATEGORIES = ["All", "Branding", "Graphic Design", "Digital Marketing"];
 
 // ── Single project card ────────────────────────────────────────────────────
 function ProjectCard({ project, index }: { project: KrioskProject; index: number }) {
@@ -33,13 +31,14 @@ function ProjectCard({ project, index }: { project: KrioskProject; index: number
       >
         {/* ── Image ── */}
         <div className="relative h-72 overflow-hidden">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
+          {/* ✅ Use Next.js Image instead of <img> */}
+          <Image
             src={project.thumbnail}
             alt={project.title}
-            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-            loading="lazy"
-            decoding="async"
+            fill
+            sizes="(max-width: 768px) 100vw, 50vw"
+            className="object-cover transition-transform duration-700 group-hover:scale-110"
+            loading={index < 2 ? "eager" : "lazy"} // ✅ Eager-load first 2 visible cards
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
 
