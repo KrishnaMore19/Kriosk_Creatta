@@ -101,26 +101,35 @@ const SERVICES = [
 const springEase = [0.22, 1, 0.36, 1] as const;
 
 // ── Lock body scroll when drawer is open ─────────────────────────────────────
+// FIX: Use a ref to store scrollY BEFORE the body is locked so we can
+//      reliably restore it on close — instead of trying to parse it back
+//      from body.style.top which caused the page to jump to the top.
 
 function useBodyScrollLock(locked: boolean) {
+  const savedScrollY = useRef(0); // ← stores the scroll position at lock time
+
   useEffect(() => {
     if (locked) {
-      const scrollY = window.scrollY;
+      // Capture scroll position BEFORE we fix the body
+      savedScrollY.current = window.scrollY;
+
       document.body.style.position = "fixed";
-      document.body.style.top = `-${scrollY}px`;
+      document.body.style.top = `-${savedScrollY.current}px`;
       document.body.style.width = "100%";
       document.body.style.overflow = "hidden";
     } else {
-      const scrollY = document.body.style.top;
+      // Restore styles first, then scroll — order matters
       document.body.style.position = "";
       document.body.style.top = "";
       document.body.style.width = "";
       document.body.style.overflow = "";
-      if (scrollY) {
-        window.scrollTo(0, parseInt(scrollY || "0") * -1);
-      }
+
+      // Restore to exact saved position from ref (never mis-parsed)
+      window.scrollTo(0, savedScrollY.current);
     }
+
     return () => {
+      // Cleanup in case component unmounts while drawer is open
       document.body.style.position = "";
       document.body.style.top = "";
       document.body.style.width = "";
@@ -336,7 +345,7 @@ function ServicePanel({
           ))}
         </div>
 
-        {/* ── FIX: "Learn more" is now a real button ── */}
+        {/* Learn more button */}
         <button
           onClick={onClick}
           className="mt-4 flex items-center gap-1.5 group/btn"
@@ -453,7 +462,7 @@ function ServiceDrawer({
   service: (typeof SERVICES)[0] | null;
   onClose: () => void;
 }) {
-  // Lock body scroll when drawer is open
+  // ✅ FIX APPLIED HERE — scroll lock now uses a ref to save/restore position
   useBodyScrollLock(!!service);
 
   // Close on Escape key
@@ -469,7 +478,7 @@ function ServiceDrawer({
     <AnimatePresence>
       {service && (
         <>
-          {/* Backdrop — sits above navbar via z-[9998] */}
+          {/* Backdrop */}
           <motion.div
             className="fixed inset-0"
             style={{ zIndex: 9998, backgroundColor: "rgba(0,0,0,0.5)" }}
@@ -479,7 +488,7 @@ function ServiceDrawer({
             onClick={onClose}
           />
 
-          {/* Drawer panel — sits above backdrop */}
+          {/* Drawer panel */}
           <motion.div
             className="fixed top-0 right-0 h-full overflow-y-auto"
             style={{
@@ -499,7 +508,7 @@ function ServiceDrawer({
             <div className="h-1 w-full bg-brand-green flex-shrink-0" />
 
             <div className="p-6 sm:p-8 md:p-10">
-              {/* Close — sticky so it's always reachable */}
+              {/* Close button */}
               <div className="flex items-center justify-between mb-8">
                 <button
                   onClick={onClose}
@@ -513,7 +522,6 @@ function ServiceDrawer({
                   Close
                 </button>
 
-                {/* Service number top-right */}
                 <span
                   className="text-[10px] font-body font-bold tracking-[0.16em] uppercase"
                   style={{ color: "var(--brand-green)" }}
