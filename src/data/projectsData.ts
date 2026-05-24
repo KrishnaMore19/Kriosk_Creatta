@@ -206,7 +206,7 @@ export const KRIOSK_PROJECTS: KrioskProject[] = [
         images: [
           `/samrat-laminates/4.jpg`,
           `/samrat-laminates/2.jpg`,
-          `/samrat-laminates/5.jpg`,
+          `/samrat-laminates/.jpg`,
         ],
         description: "Social Media",
       },
@@ -359,7 +359,7 @@ export const KRIOSK_PROJECTS: KrioskProject[] = [
     tagline: "The center of surfaces",
     description:
       "Hirshita Leggings is a fashion brand specializing in premium legwear. Kriosk Creata developed a vibrant brand identity and advertising campaign that captures the brand's energy and appeal to their fashion-conscious customer base.",
-    thumbnail: `/eurolam/Miyora.jpg`,
+    thumbnail: `/Eurolam/Miyora.jpg`,
     year: "2023",
     category: "Branding",
     tags: ["Advertising", "Brand Identity", "Digital"],
@@ -368,9 +368,9 @@ export const KRIOSK_PROJECTS: KrioskProject[] = [
         title: "Advertising",
         items: ["Catalogue Design", "Product Brochure", "Collection Swatches"],
         images: [
-          `/eurolam/Miyora.jpg`,
-          `/eurolam/2.jpg`,
-          `/eurolam/3.jpg`,
+          `/Eurolam/Miyora.jpg`,
+          `/Eurolam/2.jpg`,
+          `/Eurolam/3.jpg`,
         ],
         description: "Catalogue Design | Product Brochure | Collection Swatches",
       },
@@ -378,9 +378,9 @@ export const KRIOSK_PROJECTS: KrioskProject[] = [
         title: "Brand Identity",
         items: ["Brand Logo", "Brand Association", "Brand Awareness"],
         images: [
-          `/eurolam/Miyora.jpg`,
-          `/eurolam/2.jpg`,
-          `/eurolam/3.jpg`,
+          `/Eurolam/Miyora.jpg`,
+          `/Eurolam/2.jpg`,
+          `/Eurolam/3.jpg`,
         ],
         description: "Brand Logo | Brand Association | Brand Awarness",
       },
@@ -388,9 +388,9 @@ export const KRIOSK_PROJECTS: KrioskProject[] = [
         title: "Digital",
         items: ["Social Media", "Digital Campaigns"],
         images: [
-          `/eurolam/Miyora.jpg`,
-          `/eurolam/2.jpg`,
-          `/eurolam/3.jpg`,
+          `/Eurolam/Miyora.jpg`,
+          `/Eurolam/2.jpg`,
+          `/Eurolam/3.jpg`,
         ],
         description: "Social Media | Digital Campaigns",
       },
@@ -400,7 +400,7 @@ export const KRIOSK_PROJECTS: KrioskProject[] = [
 
 
   {
-    id: "indus-seeds",
+    id: "indus-seedss",
     slug: "indus-seeds",
     title: "Indus Seeds",
     tagline: "Sowing the seeds of success",
