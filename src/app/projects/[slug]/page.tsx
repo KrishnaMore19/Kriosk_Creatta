@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { ArrowLeft, ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image"; // ✅ Next.js Image
 import { useParams } from "next/navigation";
 import Navbar from "@/components/ui/Navbar";
 import Footer from "@/components/ui/Footer";
@@ -80,6 +81,11 @@ function StyleInjector() {
   return null;
 }
 
+// ─── Shimmer placeholder (shown while image loads) ────────────────────────────
+// A tiny base64 grey gradient — used as blurDataURL so there's NO white flash
+const BLUR_PLACEHOLDER =
+  "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAADCAYAAAC09K7GAAAAFklEQVQI12NgYGBg+P//fwMTAwMDAwAIDAIDmT4MCQAAAABJRU5ErkJggg==";
+
 // ─── Left Image Slider ────────────────────────────────────────────────────────
 function ImageSlider({
   project,
@@ -89,9 +95,14 @@ function ImageSlider({
   images: string[];
 }) {
   const [current, setCurrent] = useState(0);
+  const [loaded, setLoaded] = useState<boolean[]>([]);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  useEffect(() => { setCurrent(0); }, [images]);
+  // Reset on images change
+  useEffect(() => {
+    setCurrent(0);
+    setLoaded(new Array(images.length).fill(false));
+  }, [images]);
 
   const startTimer = useCallback(() => {
     if (timerRef.current) clearInterval(timerRef.current);
@@ -115,24 +126,36 @@ function ImageSlider({
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, [startTimer]);
 
+  const markLoaded = (idx: number) => {
+    setLoaded((prev) => {
+      const next = [...prev];
+      next[idx] = true;
+      return next;
+    });
+  };
+
   if (!images.length) return null;
 
   return (
-    // ✅ FIX: Changed from "sticky top-16 h-[calc(100vh-64px)]"
-    //         to "sticky top-0 h-screen"
-    //         because <main> now has pt-16, so no need to offset here
     <div className="sticky top-0 w-full h-screen overflow-hidden">
 
-      {/* Blurred background */}
-      <img
-        key={`bg-${images[current]}-${current}`}
-        src={images[current]}
-        alt=""
-        aria-hidden="true"
-        className="absolute inset-0 w-full h-full object-cover scale-110"
-        style={{ filter: "blur(28px) brightness(0.45) saturate(1.2)" }}
-        draggable={false}
-      />
+      {/* ✅ Blurred background — Next.js Image with fill */}
+      <div className="absolute inset-0 scale-110">
+        <Image
+          key={`bg-${images[current]}`}
+          src={images[current]}
+          alt=""
+          fill
+          aria-hidden="true"
+          className="object-cover"
+          style={{ filter: "blur(28px) brightness(0.45) saturate(1.2)" }}
+          placeholder="blur"
+          blurDataURL={BLUR_PLACEHOLDER}
+          // ✅ priority on first slide so background loads instantly
+          priority={current === 0}
+          sizes="50vw"
+        />
+      </div>
 
       {/* Progress bar */}
       {images.length > 1 && (
@@ -145,15 +168,32 @@ function ImageSlider({
         </div>
       )}
 
-      {/* Foreground image */}
-      <img
-        key={`${images[current]}-${current}`}
-        src={images[current]}
-        alt={`${project.title} — ${current + 1}`}
-        className="absolute inset-0 w-full h-full object-contain z-10"
-        style={{ animation: `imgFadeIn 0.8s ${E} both` }}
-        draggable={false}
-      />
+      {/* ✅ Foreground image — all slides pre-rendered, only active one visible */}
+      {images.map((src, idx) => (
+        <div
+          key={src}
+          className="absolute inset-0 z-10"
+          style={{
+            // Keep all images mounted (pre-loaded), just hide non-active ones
+            opacity: idx === current ? 1 : 0,
+            animation: idx === current ? `imgFadeIn 0.8s ${E} both` : "none",
+            transition: "opacity 0.5s ease",
+          }}
+        >
+          <Image
+            src={src}
+            alt={`${project.title} — ${idx + 1}`}
+            fill
+            className="object-contain"
+            placeholder="blur"
+            blurDataURL={BLUR_PLACEHOLDER}
+            // ✅ First image & first slide = priority (loads before page paint)
+            priority={idx === 0}
+            sizes="50vw"
+            onLoad={() => markLoaded(idx)}
+          />
+        </div>
+      ))}
 
       {/* Counter */}
       {images.length > 1 && (
@@ -380,7 +420,7 @@ function InfoPanel({
 
       </div>
 
-      {/* Next Project strip */}
+      {/* ✅ Next Project strip — thumbnail uses Next.js Image */}
       {nextProject && (
         <div
           className="border-t border-brand-green/10 bg-white/40"
@@ -402,11 +442,16 @@ function InfoPanel({
               </p>
             </div>
             <div className="flex items-center gap-3">
-              <div className="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0 ring-1 ring-brand-green/10 group-hover:ring-brand-green/30 transition-all duration-500">
-                <img
+              {/* ✅ Replaced <img> with Next.js <Image> */}
+              <div className="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0 relative ring-1 ring-brand-green/10 group-hover:ring-brand-green/30 transition-all duration-500">
+                <Image
                   src={nextProject.thumbnail}
                   alt={nextProject.title}
-                  className="w-full h-full object-cover transition-transform duration-600 group-hover:scale-110"
+                  fill
+                  className="object-cover transition-transform duration-600 group-hover:scale-110"
+                  placeholder="blur"
+                  blurDataURL={BLUR_PLACEHOLDER}
+                  sizes="56px"
                 />
               </div>
               <div className="w-9 h-9 rounded-full bg-brand-green flex items-center justify-center shadow-md shadow-brand-green/20 transition-all duration-500 group-hover:translate-x-1.5 group-hover:shadow-brand-green/40">
@@ -447,8 +492,6 @@ function ProjectDetail({
   const heroImages: string[] = project.sections[activeSection]?.images ?? [];
 
   return (
-    // ✅ FIX: Added "pt-16" so content starts BELOW the fixed navbar (64px height)
-    //         Previously there was no pt-16, so navbar was overlapping the top of the page
     <main className="min-h-screen bg-brand-cream pt-16">
 
       {/* Split Layout */}
@@ -519,11 +562,6 @@ export default function ProjectDetailPage() {
   const nextProjectRaw = getNextProject(slug);
   const nextProject: KrioskProject | null =
     nextProjectRaw != null ? (nextProjectRaw as KrioskProject) : null;
-
-  if (process.env.NODE_ENV === "development") {
-    console.log("[ProjectDetailPage] slug:", slug);
-    console.log("[ProjectDetailPage] nextProject:", nextProject);
-  }
 
   if (!project) {
     return (
