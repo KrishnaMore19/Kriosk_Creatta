@@ -16,14 +16,11 @@ const REELS = [
 const GALLERY_CSS = `
   @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400;1,700&family=DM+Sans:wght@400;500;600&family=Cormorant+Garamond:ital,wght@1,400;1,600&display=swap');
 
-  /* ── Scroll wrapper — creates the scroll "room" ── */
   .g-scroll-wrapper {
     position: relative;
-    /* 100vh per reel + 1 extra to let the last reel breathe before release */
     height: calc(${REELS.length + 1} * 100vh);
   }
 
-  /* ── Section shell — sticky pin ── */
   .g-section {
     position: sticky;
     top: 0;
@@ -32,7 +29,7 @@ const GALLERY_CSS = `
     background-color: #f7f4ef;
     display: flex;
     align-items: center;
-    max-width: 100vw; /* ✅ prevent horizontal overflow */
+    max-width: 100vw;
   }
   .g-section::before {
     content: ""; position: absolute; inset: 0;
@@ -50,11 +47,10 @@ const GALLERY_CSS = `
     position: relative; z-index: 1;
     max-width: 1280px; margin: 0 auto; padding: 0 40px;
     width: 100%;
-    box-sizing: border-box; /* ✅ ensure padding doesn't add width */
+    box-sizing: border-box;
   }
   @media (max-width: 640px) { .g-inner { padding: 0 18px; } }
 
-  /* ── Header ── */
   .g-header {
     display: flex; align-items: flex-end;
     justify-content: space-between; gap: 24px; flex-wrap: wrap;
@@ -75,7 +71,6 @@ const GALLERY_CSS = `
   }
   .g-h2 em { color: #5d7261; font-style: italic; }
 
-  /* ── Scroll progress bar ── */
   .g-scroll-progress {
     position: fixed;
     top: 0; left: 0; right: 0;
@@ -93,7 +88,6 @@ const GALLERY_CSS = `
     transition: width 0.15s linear;
   }
 
-  /* ── Main 2-column body ── */
   .g-body {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -107,7 +101,6 @@ const GALLERY_CSS = `
     .g-body { gap: 24px; }
   }
 
-  /* ── Vertical Stack wrapper ── */
   .vs-wrapper {
     position: relative;
     height: 500px;
@@ -119,7 +112,6 @@ const GALLERY_CSS = `
     .vs-wrapper { height: 420px; }
   }
 
-  /* ── Card stage ── */
   .vs-stage {
     position: relative;
     width: 240px;
@@ -132,7 +124,6 @@ const GALLERY_CSS = `
     .vs-stage { width: 200px; height: 340px; }
   }
 
-  /* ── Cards ── */
   .vs-card { position: absolute; cursor: grab; }
   .vs-card:active { cursor: grabbing; }
   .vs-card.is-peek { cursor: pointer; }
@@ -149,7 +140,6 @@ const GALLERY_CSS = `
     .vs-frame { width: 185px; height: 330px; }
   }
 
-  /* ── Video & image fill — shared class ── */
   .vs-media {
     position: absolute; inset: 0;
     width: 100%; height: 100%;
@@ -191,7 +181,6 @@ const GALLERY_CSS = `
     font-size: 12px; font-weight: 600; color: #f7f4ef;
   }
 
-  /* ── Mute button ── */
   .vs-mute {
     position: absolute; bottom: 46px; right: 12px; z-index: 6;
     width: 28px; height: 28px; border-radius: 50%;
@@ -203,7 +192,6 @@ const GALLERY_CSS = `
   }
   .vs-mute:hover { background: rgba(247,244,239,0.30); }
 
-  /* ── Counter ── */
   .vs-counter {
     position: absolute; left: 0; top: 50%; transform: translateY(-50%);
     display: flex; flex-direction: column; align-items: center; gap: 8px;
@@ -219,7 +207,6 @@ const GALLERY_CSS = `
     font-size: 12px; color: #6b6b6b;
   }
 
-  /* ── Dots ── */
   .vs-dots {
     position: absolute; right: 0; top: 50%; transform: translateY(-50%);
     display: flex; flex-direction: column; gap: 8px;
@@ -233,7 +220,6 @@ const GALLERY_CSS = `
   .vs-dot.active { height: 22px; background: #5d7261; }
   .vs-dot:hover:not(.active) { background: rgba(93,114,97,0.55); }
 
-  /* ── Scroll hint ── */
   .vs-hint {
     position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
     display: flex; flex-direction: column; align-items: center; gap: 6px;
@@ -243,7 +229,6 @@ const GALLERY_CSS = `
     letter-spacing: 0.2em; text-transform: uppercase;
   }
 
-  /* ── Project detail panel ── */
   .pd-wrap { display: flex; flex-direction: column; gap: 20px; }
   .pd-num {
     font-family: 'Playfair Display', Georgia, serif;
@@ -293,14 +278,12 @@ const GALLERY_CSS = `
   .pd-cta:hover { color: white; }
   .pd-cta:hover::before { transform: scaleX(1); }
 
-  /* ── Footer wrapper — lives outside sticky section in normal flow ── */
   .g-footer-wrap {
     background-color: #f7f4ef;
     padding: 0 40px;
   }
   @media (max-width: 640px) { .g-footer-wrap { padding: 0 18px; } }
 
-  /* ── Footer ── */
   .g-footer {
     display: flex; align-items: center; gap: 20px;
     max-width: 1280px; margin: 0 auto;
@@ -313,7 +296,6 @@ const GALLERY_CSS = `
     white-space: nowrap; letter-spacing: 0.02em;
   }
 
-  /* ── Progress bar for video ── */
   .vs-progress {
     position: absolute; bottom: 0; left: 0; right: 0; height: 2px; z-index: 7;
     background: rgba(255,255,255,0.15);
@@ -323,29 +305,19 @@ const GALLERY_CSS = `
     transition: width 0.25s linear;
   }
 
-  /* ── Scroll-to-continue nudge ── */
   .g-continue-nudge {
     position: absolute;
-    bottom: 24px;
-    right: 40px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
+    bottom: 24px; right: 40px;
+    display: flex; align-items: center; gap: 8px;
     font-family: 'DM Sans', sans-serif;
-    font-size: 10px;
-    font-weight: 500;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
+    font-size: 10px; font-weight: 500;
+    letter-spacing: 0.18em; text-transform: uppercase;
     color: #5d7261;
-    opacity: 0;
-    transform: translateY(8px);
+    opacity: 0; transform: translateY(8px);
     transition: opacity 0.5s, transform 0.5s;
     pointer-events: none;
   }
-  .g-continue-nudge.show {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  .g-continue-nudge.show { opacity: 1; transform: translateY(0); }
 
   @media (max-width: 640px) {
     .g-tagline { font-size: 12px; white-space: normal; text-align: center; }
@@ -363,12 +335,13 @@ function GalleryStyles() {
   return <style dangerouslySetInnerHTML={{ __html: GALLERY_CSS }} />;
 }
 
-// ── Single card — handles its own video / image logic ─────────────────────
+// ── Single card ────────────────────────────────────────────────────────────
 function ReelCard({
   reel,
   isCurrent,
   isHovered,
   muted,
+  isSectionActive,
   onMuteToggle,
   onHoverStart,
   onHoverEnd,
@@ -383,6 +356,7 @@ function ReelCard({
   isCurrent: boolean;
   isHovered: boolean;
   muted: boolean;
+  isSectionActive: boolean;
   onMuteToggle: () => void;
   onHoverStart: () => void;
   onHoverEnd: () => void;
@@ -396,22 +370,34 @@ function ReelCard({
   const videoRef = useRef<HTMLVideoElement>(null);
   const [progress, setProgress] = useState(0);
 
+  // ── Play / pause ─────────────────────────────────────────────────────────
+  // Plays only when this card is current AND the gallery section is on screen.
+  // The moment the user scrolls away to another section, isSectionActive → false
+  // and the video immediately pauses.
   useEffect(() => {
     const v = videoRef.current;
     if (!v) return;
-    if (isCurrent) {
+    if (isCurrent && isSectionActive) {
       v.currentTime = 0;
       v.play().catch(() => {});
     } else {
       v.pause();
-      v.currentTime = 0;
+      if (!isCurrent) v.currentTime = 0;
     }
-  }, [isCurrent]);
+  }, [isCurrent, isSectionActive]);
 
+  // ── Audio ─────────────────────────────────────────────────────────────────
+  // Rules:
+  //  • Not the current card           → always muted
+  //  • Current card, section inactive → always muted (user left the section)
+  //  • Current card, section active   → respect the user's mute toggle
   useEffect(() => {
-    if (videoRef.current) videoRef.current.muted = muted;
-  }, [muted]);
+    const v = videoRef.current;
+    if (!v) return;
+    v.muted = (isCurrent && isSectionActive) ? muted : true;
+  }, [muted, isCurrent, isSectionActive]);
 
+  // ── Progress bar ──────────────────────────────────────────────────────────
   useEffect(() => {
     const v = videoRef.current;
     if (!v || !isCurrent) return;
@@ -484,7 +470,8 @@ function ReelCard({
             {muted ? (
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
-                <line x1="23" y1="9" x2="17" y2="15" /><line x1="17" y1="9" x2="23" y2="15" />
+                <line x1="23" y1="9" x2="17" y2="15" />
+                <line x1="17" y1="9" x2="23" y2="15" />
               </svg>
             ) : (
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -507,20 +494,19 @@ function ReelCard({
 }
 
 // ── Vertical Image Stack ───────────────────────────────────────────────────
-// NOTE: Wheel handler is intentionally removed — page scroll controls reel index now.
-// Drag is kept for mobile/touch users.
 function VerticalImageStack({
   currentIndex,
   setCurrentIndex,
+  isSectionActive,
 }: {
   currentIndex: number;
   setCurrentIndex: (i: number | ((p: number) => number)) => void;
+  isSectionActive: boolean;
 }) {
   const total = REELS.length;
-  const [muted, setMuted] = useState(true);
+  const [muted, setMuted] = useState(false);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
-  // Mobile drag — still lets users swipe cards directly
   const lastNav = useRef(0);
   const COOLDOWN = 400;
 
@@ -567,9 +553,9 @@ function VerticalImageStack({
       <div className="vs-stage" style={{ perspective: "1200px" }}>
         {REELS.map((reel, index) => {
           if (!isVisible(index)) return null;
-          const s = getCardStyle(index);
           const isCurrent = index === currentIndex;
           const isHovered = hoveredIndex === index;
+          const s = getCardStyle(index);
 
           const hoverY       = isCurrent ? s.y       : s.y * 0.55;
           const hoverScale   = isCurrent ? s.scale   : s.scale * 1.10;
@@ -583,6 +569,7 @@ function VerticalImageStack({
               isCurrent={isCurrent}
               isHovered={isHovered}
               muted={muted}
+              isSectionActive={isSectionActive}
               onMuteToggle={() => setMuted((m) => !m)}
               style={{
                 y:       isHovered ? hoverY       : s.y,
@@ -667,16 +654,15 @@ function ProjectDetail({ reel, index }: { reel: (typeof REELS)[0]; index: number
   );
 }
 
-// ── Main Section ──────────────────────────────────────────────────────────
+// ── Main Section ───────────────────────────────────────────────────────────
 export default function GallerySection() {
   const hRef    = useRef(null);
   const hInView = useInView(hRef, { once: true, margin: "-80px" });
 
-  // ── Scroll-jacked state ──────────────────────────────────────────────────
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [scrollProgress, setScrollProgress] = useState(0);  // 0–1 within section
+  const [currentIndex, setCurrentIndex]       = useState(0);
+  const [scrollProgress, setScrollProgress]   = useState(0);
   const [isSectionActive, setIsSectionActive] = useState(false);
-  const [isLastReel, setIsLastReel] = useState(false);
+  const [isLastReel, setIsLastReel]           = useState(false);
   const scrollWrapperRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -684,34 +670,26 @@ export default function GallerySection() {
       const wrapper = scrollWrapperRef.current;
       if (!wrapper) return;
 
-      const rect = wrapper.getBoundingClientRect();
+      const rect          = wrapper.getBoundingClientRect();
       const wrapperHeight = wrapper.offsetHeight;
-      const vh = window.innerHeight;
+      const vh            = window.innerHeight;
 
-      // How far we've scrolled into the wrapper (px scrolled past its top)
-      const scrolledIn = Math.max(0, -rect.top);
-      // Total scrollable distance inside wrapper (wrapper height minus one viewport)
+      const scrolledIn     = Math.max(0, -rect.top);
       const totalScrollable = wrapperHeight - vh;
-      // Normalised 0→1
-      const progress = Math.min(1, Math.max(0, scrolledIn / totalScrollable));
+      const progress        = Math.min(1, Math.max(0, scrolledIn / totalScrollable));
 
-      // Section is "active" when it's pinned (not fully above or below viewport)
+      // Section is "active" (pinned) only while it occupies the viewport
       const active = rect.top <= 0 && rect.bottom >= vh;
       setIsSectionActive(active);
       setScrollProgress(progress);
 
-      // Map progress to reel index
-      // We use (REELS.length) steps in totalScrollable:
-      // step size = totalScrollable / REELS.length
-      // But the last reel gets the final extra 1vh of breathing room
-      const rawIndex = Math.floor(progress * REELS.length);
+      const rawIndex     = Math.floor(progress * REELS.length);
       const clampedIndex = Math.min(REELS.length - 1, rawIndex);
       setCurrentIndex(clampedIndex);
       setIsLastReel(clampedIndex === REELS.length - 1);
     };
 
     window.addEventListener("scroll", handleScroll, { passive: true });
-    // Run once on mount
     handleScroll();
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
@@ -720,7 +698,7 @@ export default function GallerySection() {
     <>
       <GalleryStyles />
 
-      {/* ── Top progress bar ── */}
+      {/* Top progress bar */}
       <div className={`g-scroll-progress${isSectionActive ? " visible" : ""}`}>
         <div
           className="g-scroll-progress-bar"
@@ -728,14 +706,13 @@ export default function GallerySection() {
         />
       </div>
 
-      {/* ── Tall scroll wrapper — gives the page enough height to scroll through all reels ── */}
+      {/* Tall scroll wrapper */}
       <div ref={scrollWrapperRef} className="g-scroll-wrapper">
 
-        {/* ── Sticky section ── */}
+        {/* Sticky section */}
         <section id="gallery" className="g-section" aria-label="Work gallery">
           <div className="g-inner">
 
-            {/* ── Header ── */}
             <header className="g-header" ref={hRef}>
               <motion.div
                 initial={{ opacity: 0, x: -28 }}
@@ -753,7 +730,6 @@ export default function GallerySection() {
               </motion.div>
             </header>
 
-            {/* ── Body: Stack + Detail ── */}
             <div className="g-body">
               <motion.div
                 initial={{ opacity: 0, x: -40 }}
@@ -764,6 +740,7 @@ export default function GallerySection() {
                 <VerticalImageStack
                   currentIndex={currentIndex}
                   setCurrentIndex={setCurrentIndex}
+                  isSectionActive={isSectionActive}
                 />
               </motion.div>
 
@@ -777,7 +754,6 @@ export default function GallerySection() {
               </motion.div>
             </div>
 
-            {/* ── "Keep scrolling" nudge — appears on last reel ── */}
             <div className={`g-continue-nudge${isLastReel ? " show" : ""}`}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M12 5v14M19 12l-7 7-7-7" />
@@ -789,9 +765,6 @@ export default function GallerySection() {
         </section>
 
       </div>
-
-      {/* ── Footer tagline — outside sticky section so it's never clipped ── */}
-  
     </>
   );
 }

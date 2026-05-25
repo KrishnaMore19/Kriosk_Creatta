@@ -71,8 +71,14 @@ export default function HeroSection() {
       setMuted(false);
     };
 
-    document.addEventListener("click", handleInteraction, { once: true });
-    document.addEventListener("touchstart", handleInteraction, { once: true });
+    // FIX: Scope listeners to #home section only, NOT document.
+    // Previously, clicks on "View Our Work" / "Our Story" buttons bubbled up
+    // to document and triggered unmute even when navigating away from this section.
+    const section = document.querySelector("#home");
+    if (section) {
+      section.addEventListener("click", handleInteraction, { once: true });
+      section.addEventListener("touchstart", handleInteraction, { once: true });
+    }
 
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -80,7 +86,7 @@ export default function HeroSection() {
           // Section back in view — resume playing (stays muted until user interacts)
           video.play().catch(() => {});
         } else {
-          // FIX Issue 2: section out of view — mute audio only, do NOT pause
+          // Section out of view — mute audio only, do NOT pause
           video.muted = true;
           interacted.current = false;
           setMuted(true);
@@ -89,13 +95,14 @@ export default function HeroSection() {
       { threshold: 0.2 }
     );
 
-    const section = document.querySelector("#home");
     if (section) observer.observe(section);
 
     return () => {
       observer.disconnect();
-      document.removeEventListener("click", handleInteraction);
-      document.removeEventListener("touchstart", handleInteraction);
+      if (section) {
+        section.removeEventListener("click", handleInteraction);
+        section.removeEventListener("touchstart", handleInteraction);
+      }
     };
   }, []);
 
@@ -239,7 +246,7 @@ export default function HeroSection() {
           </motion.div>
         </div>
 
-        {/* RIGHT: Video — FIX Issue 1: show on ALL screen sizes (removed hidden sm:flex) */}
+        {/* RIGHT: Video */}
         <motion.div
           className="flex md:w-[45%] w-full items-center justify-center py-6 md:py-0 self-center"
           initial={{ opacity: 0, x: 40 }}
