@@ -97,12 +97,27 @@ export default function HeroSection() {
 
     if (section) observer.observe(section);
 
+    // FIX: Mute video when user switches to another browser tab
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "hidden") {
+        // User left the tab — mute immediately and reset interaction state
+        video.muted = true;
+        interacted.current = false;
+        setMuted(true);
+      }
+      // NOTE: We intentionally do NOT unmute on "visible" —
+      // the user should have to click the button again to restore audio.
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
     return () => {
       observer.disconnect();
       if (section) {
         section.removeEventListener("click", handleInteraction);
         section.removeEventListener("touchstart", handleInteraction);
       }
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, []);
 

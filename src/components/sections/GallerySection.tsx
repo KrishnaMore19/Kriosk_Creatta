@@ -1,15 +1,21 @@
 "use client";
 import { useRef, useState, useEffect, useCallback } from "react";
-import { motion, AnimatePresence, useInView, type PanInfo, type TargetAndTransition } from "framer-motion";
+import {
+  motion,
+  AnimatePresence,
+  useInView,
+  type PanInfo,
+  type TargetAndTransition,
+} from "framer-motion";
 
 // ── Project data ───────────────────────────────────────────────────────────
 const REELS = [
-  { id: 1, src: "/KrioskCreta.video/1.mp4",         poster: "https://picsum.photos/seed/kr1/400/711", title: "Brand Identity",    client: "Reliance Foods",  tag: "Branding"  },
-  { id: 2, src: "/KrioskCreta.video/2.mp4", poster: "https://picsum.photos/seed/kr2/400/711", title: "Digital Campaign",  client: "ADA Developers",  tag: "Digital"   },
-  { id: 3, src: "/KrioskCreta.video/3.mp4",    poster: "https://picsum.photos/seed/kr3/400/711", title: "Motion Design",     client: "Veda Naturals",   tag: "Motion"    },
-  { id: 4, src: "/KrioskCreta.video/4.mp4", poster: "https://picsum.photos/seed/kr4/400/711", title: "Packaging Reveal",  client: "Tatva Hotels",    tag: "Packaging" },
-  { id: 5, src: "/KrioskCreta.video/5.mp4",   poster: "https://picsum.photos/seed/kr5/400/711", title: "Social Content",    client: "Zeal Fitness",    tag: "Social"    },
-  { id: 6, src: "/KrioskCreta.video/6.mp4",  poster: "https://picsum.photos/seed/kr6/400/711", title: "Event Highlight",   client: "Fusion Events",   tag: "Events"    },
+  { id: 1, src: "/KrioskCreta.video/1.mp4", poster: "https://picsum.photos/seed/kr1/400/711", title: "Brand Identity",   client: "Reliance Foods", tag: "Branding"  },
+  { id: 2, src: "/KrioskCreta.video/2.mp4", poster: "https://picsum.photos/seed/kr2/400/711", title: "Digital Campaign", client: "ADA Developers", tag: "Digital"   },
+  { id: 3, src: "/KrioskCreta.video/3.mp4", poster: "https://picsum.photos/seed/kr3/400/711", title: "Motion Design",    client: "Veda Naturals",  tag: "Motion"    },
+  { id: 4, src: "/KrioskCreta.video/4.mp4", poster: "https://picsum.photos/seed/kr4/400/711", title: "Packaging Reveal", client: "Tatva Hotels",   tag: "Packaging" },
+  { id: 5, src: "/KrioskCreta.video/5.mp4", poster: "https://picsum.photos/seed/kr5/400/711", title: "Social Content",   client: "Zeal Fitness",   tag: "Social"    },
+  { id: 6, src: "/KrioskCreta.video/6.mp4", poster: "https://picsum.photos/seed/kr6/400/711", title: "Event Highlight",  client: "Fusion Events",  tag: "Events"    },
 ];
 
 // ── Styles ─────────────────────────────────────────────────────────────────
@@ -30,6 +36,7 @@ const GALLERY_CSS = `
     display: flex;
     align-items: center;
     max-width: 100vw;
+    will-change: transform;
   }
   .g-section::before {
     content: ""; position: absolute; inset: 0;
@@ -135,6 +142,9 @@ const GALLERY_CSS = `
     border-radius: 20px;
     overflow: hidden;
     background: #ede8e0;
+    /* GPU layer promotion for smooth card transforms */
+    will-change: transform;
+    transform: translateZ(0);
   }
   @media (max-width: 360px) {
     .vs-frame { width: 185px; height: 330px; }
@@ -146,6 +156,18 @@ const GALLERY_CSS = `
     object-fit: cover;
     display: block;
   }
+
+  /* Cross-fade overlay for smooth video→video transitions */
+  .vs-media-transition {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
+    opacity: 0;
+    transition: opacity 0.35s ease;
+    pointer-events: none;
+  }
+  .vs-media-transition.show { opacity: 1; }
 
   .vs-sheen {
     position: absolute; inset: 0; z-index: 2;
@@ -200,6 +222,7 @@ const GALLERY_CSS = `
     font-family: 'Playfair Display', Georgia, serif;
     font-size: 36px; font-weight: 300; color: #1a1a1a; line-height: 1;
     letter-spacing: -0.02em;
+    transition: opacity 0.2s ease;
   }
   .vs-count-rule { width: 1px; height: 28px; background: rgba(93,114,97,0.25); }
   .vs-count-tot {
@@ -215,7 +238,7 @@ const GALLERY_CSS = `
     width: 6px; height: 6px; border-radius: 100px;
     background: rgba(93,114,97,0.3);
     border: none; cursor: pointer;
-    transition: height 0.3s, background 0.3s;
+    transition: height 0.3s ease, background 0.3s ease;
   }
   .vs-dot.active { height: 22px; background: #5d7261; }
   .vs-dot:hover:not(.active) { background: rgba(93,114,97,0.55); }
@@ -369,28 +392,35 @@ function ReelCard({
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [progress, setProgress] = useState(0);
+  const wasCurrentRef = useRef(false);
 
   // ── Play / pause ─────────────────────────────────────────────────────────
-  // Plays only when this card is current AND the gallery section is on screen.
-  // The moment the user scrolls away to another section, isSectionActive → false
-  // and the video immediately pauses.
+  // KEY FIX: only reset currentTime when freshly becoming current (not on every render).
+  // Use a ref to track the previous isCurrent state so we don't re-seek on
+  // isSectionActive toggling (which caused visible stutter).
   useEffect(() => {
     const v = videoRef.current;
     if (!v) return;
+
+    const justBecameCurrent = isCurrent && !wasCurrentRef.current;
+    wasCurrentRef.current = isCurrent;
+
     if (isCurrent && isSectionActive) {
-      v.currentTime = 0;
+      // Only reset to start when the card is *first* selected, not on re-renders.
+      if (justBecameCurrent) v.currentTime = 0;
       v.play().catch(() => {});
     } else {
       v.pause();
-      if (!isCurrent) v.currentTime = 0;
+      // Reset time on deselect so next play starts fresh, but deferred
+      // so the pause takes effect first (avoids a flash of old frame).
+      if (!isCurrent) {
+        const timer = setTimeout(() => { if (v) v.currentTime = 0; }, 100);
+        return () => clearTimeout(timer);
+      }
     }
   }, [isCurrent, isSectionActive]);
 
   // ── Audio ─────────────────────────────────────────────────────────────────
-  // Rules:
-  //  • Not the current card           → always muted
-  //  • Current card, section inactive → always muted (user left the section)
-  //  • Current card, section active   → respect the user's mute toggle
   useEffect(() => {
     const v = videoRef.current;
     if (!v) return;
@@ -416,7 +446,8 @@ function ReelCard({
     <motion.div
       className="vs-card"
       animate={style}
-      transition={{ type: "spring", stiffness: 320, damping: 28, mass: 0.9 }}
+      // Smoother spring: higher stiffness + damping = snappier with less oscillation
+      transition={{ type: "spring", stiffness: 380, damping: 36, mass: 0.75 }}
       drag={drag}
       dragConstraints={dragConstraints}
       dragElastic={dragElastic}
@@ -424,11 +455,12 @@ function ReelCard({
       onHoverStart={onHoverStart}
       onHoverEnd={onHoverEnd}
       onClick={onClick}
-      style={{ transformStyle: "preserve-3d" }}
+      style={{ transformStyle: "preserve-3d", willChange: "transform" }}
     >
       <div className="vs-frame" style={{ boxShadow: shadow, transition: "box-shadow 0.35s ease" }}>
         <div className="vs-sheen" />
 
+        {/* Always render the video for the current card */}
         {isCurrent && (
           <video
             ref={videoRef}
@@ -443,6 +475,7 @@ function ReelCard({
           />
         )}
 
+        {/* Poster for non-current cards */}
         {!isCurrent && (
           <img
             src={reel.poster}
@@ -508,7 +541,7 @@ function VerticalImageStack({
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
   const lastNav = useRef(0);
-  const COOLDOWN = 400;
+  const COOLDOWN = 350; // slightly tighter for snappier feel
 
   const navigate = useCallback(
     (dir: number) => {
@@ -542,14 +575,22 @@ function VerticalImageStack({
 
   return (
     <div className="vs-wrapper">
-      {/* Counter — left */}
+      {/* Counter */}
       <div className="vs-counter">
-        <span className="vs-count-cur">{String(currentIndex + 1).padStart(2, "0")}</span>
+        <motion.span
+          key={currentIndex}
+          className="vs-count-cur"
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.25, ease: "easeOut" }}
+        >
+          {String(currentIndex + 1).padStart(2, "0")}
+        </motion.span>
         <div className="vs-count-rule" />
         <span className="vs-count-tot">{String(total).padStart(2, "0")}</span>
       </div>
 
-      {/* Card stack — centre */}
+      {/* Card stack */}
       <div className="vs-stage" style={{ perspective: "1200px" }}>
         {REELS.map((reel, index) => {
           if (!isVisible(index)) return null;
@@ -590,7 +631,7 @@ function VerticalImageStack({
         })}
       </div>
 
-      {/* Dots — right */}
+      {/* Dots */}
       <div className="vs-dots">
         {REELS.map((_, i) => (
           <button
@@ -602,7 +643,7 @@ function VerticalImageStack({
         ))}
       </div>
 
-      {/* Scroll hint — bottom */}
+      {/* Scroll hint */}
       <motion.div
         className="vs-hint"
         initial={{ opacity: 0, y: 16 }}
@@ -626,14 +667,17 @@ function VerticalImageStack({
 // ── Project Detail Panel ───────────────────────────────────────────────────
 function ProjectDetail({ reel, index }: { reel: (typeof REELS)[0]; index: number }) {
   return (
-    <AnimatePresence mode="wait">
+    // KEY FIX: removed mode="wait" — now exit and enter animate simultaneously,
+    // eliminating the blocking delay. duration trimmed to 0.32s for snappier feel.
+    <AnimatePresence mode="popLayout">
       <motion.div
         key={reel.id}
         className="pd-wrap"
-        initial={{ opacity: 0, x: 28 }}
-        animate={{ opacity: 1, x: 0 }}
-        exit={{ opacity: 0, x: -20 }}
-        transition={{ duration: 0.48, ease: [0.22, 1, 0.36, 1] }}
+        initial={{ opacity: 0, x: 24, filter: "blur(4px)" }}
+        animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}
+        exit={{ opacity: 0, x: -16, filter: "blur(2px)" }}
+        transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
+        style={{ willChange: "transform, opacity" }}
       >
         <span className="pd-num">{String(index + 1).padStart(2, "0")}</span>
         <span className="pd-tag">{reel.tag}</span>
@@ -665,33 +709,49 @@ export default function GallerySection() {
   const [isLastReel, setIsLastReel]           = useState(false);
   const scrollWrapperRef = useRef<HTMLDivElement>(null);
 
+  // KEY FIX: debounce the index update from scroll to avoid flooding state.
+  // Progress bar & section-active update immediately; only index is debounced.
+  const pendingIndexRef = useRef<number>(0);
+  const indexTimerRef   = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   useEffect(() => {
     const handleScroll = () => {
       const wrapper = scrollWrapperRef.current;
       if (!wrapper) return;
 
-      const rect          = wrapper.getBoundingClientRect();
-      const wrapperHeight = wrapper.offsetHeight;
-      const vh            = window.innerHeight;
-
+      const rect           = wrapper.getBoundingClientRect();
+      const wrapperHeight  = wrapper.offsetHeight;
+      const vh             = window.innerHeight;
       const scrolledIn     = Math.max(0, -rect.top);
       const totalScrollable = wrapperHeight - vh;
       const progress        = Math.min(1, Math.max(0, scrolledIn / totalScrollable));
+      const active          = rect.top <= 0 && rect.bottom >= vh;
 
-      // Section is "active" (pinned) only while it occupies the viewport
-      const active = rect.top <= 0 && rect.bottom >= vh;
+      // These are cheap — update immediately
       setIsSectionActive(active);
       setScrollProgress(progress);
 
       const rawIndex     = Math.floor(progress * REELS.length);
       const clampedIndex = Math.min(REELS.length - 1, rawIndex);
-      setCurrentIndex(clampedIndex);
-      setIsLastReel(clampedIndex === REELS.length - 1);
+
+      // KEY FIX: only fire setCurrentIndex when the index actually changes,
+      // and debounce by ~60ms so rapid scroll events collapse into one update.
+      if (clampedIndex !== pendingIndexRef.current) {
+        pendingIndexRef.current = clampedIndex;
+        if (indexTimerRef.current) clearTimeout(indexTimerRef.current);
+        indexTimerRef.current = setTimeout(() => {
+          setCurrentIndex(clampedIndex);
+          setIsLastReel(clampedIndex === REELS.length - 1);
+        }, 60);
+      }
     };
 
     window.addEventListener("scroll", handleScroll, { passive: true });
     handleScroll();
-    return () => window.removeEventListener("scroll", handleScroll);
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      if (indexTimerRef.current) clearTimeout(indexTimerRef.current);
+    };
   }, []);
 
   return (
