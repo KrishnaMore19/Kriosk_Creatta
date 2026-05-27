@@ -243,7 +243,7 @@ export const KRIOSK_PROJECTS: KrioskProject[] = [
         images: [
           `/galaxy-mica/digital-1.jpg`,
           `/galaxy-mica/digital-2.jpg`,
-          `/galaxy-mica/digital-3.jpg`,
+          `/galaxy-mica/Layout-3.jpg`,
         ],
         description: "Social Media | Website Development",
       },
