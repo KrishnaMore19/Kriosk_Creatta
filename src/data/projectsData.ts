@@ -331,7 +331,7 @@ export const KRIOSK_PROJECTS: KrioskProject[] = [
         title: "Brand Identity",
         items: ["Brand Logo", "Brand Association", "Brand Awareness"],
         images: [
-          `/skylite-industries/Catlog/Jpge/brand-1.jpg`,
+          `/skylite-industries/Catlog/Jpge/AESTHETIC_Page_13.jpg`,
           `/skylite-industries/Catlog/Jpge/brand-2.jpg`,
           `/skylite-industries/Catlog/Jpge/brand-3.jpg`,
         ],
