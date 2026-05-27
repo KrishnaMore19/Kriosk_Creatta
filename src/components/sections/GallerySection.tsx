@@ -1,693 +1,592 @@
 "use client";
 import { useRef, useState, useEffect, useCallback } from "react";
-import {
-  motion,
-  AnimatePresence,
-  useInView,
-  type PanInfo,
-  type TargetAndTransition,
-} from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
-// ── Project data ───────────────────────────────────────────────────────────
-const REELS = [
+interface Reel {
+  id: number;
+  src: string;
+  poster: string;
+  title: string;
+  client: string;
+  tag: string;
+}
+
+const REELS: Reel[] = [
   { id: 1, src: "/KrioskCreta.video/1.mp4", poster: "https://picsum.photos/seed/kr1/400/711", title: "Brand Identity",   client: "Reliance Foods", tag: "Branding"  },
-  { id: 2, src: "/KrioskCreta.video/2.mp4", poster: "https://picsum.photos/seed/kr2/400/711", title: "Digital Campaign", client: "ADA Developers", tag: "Digital"   },
-  { id: 3, src: "/KrioskCreta.video/3.mp4", poster: "https://picsum.photos/seed/kr3/400/711", title: "Motion Design",    client: "Veda Naturals",  tag: "Motion"    },
-  { id: 4, src: "/KrioskCreta.video/4.mp4", poster: "https://picsum.photos/seed/kr4/400/711", title: "Packaging Reveal", client: "Tatva Hotels",   tag: "Packaging" },
-  { id: 5, src: "/KrioskCreta.video/5.mp4", poster: "https://picsum.photos/seed/kr5/400/711", title: "Social Content",   client: "Zeal Fitness",   tag: "Social"    },
-  { id: 6, src: "/KrioskCreta.video/6.mp4", poster: "https://picsum.photos/seed/kr6/400/711", title: "Event Highlight",  client: "Fusion Events",  tag: "Events"    },
+  { id: 2, src: "/KrioskCreta.video/2.mp4", poster: "https://picsum.photos/seed/kr2/400/711", title: "Digital Campaign", client: "ADA Developers",  tag: "Digital"   },
+  { id: 3, src: "/KrioskCreta.video/3.mp4", poster: "https://picsum.photos/seed/kr3/400/711", title: "Motion Design",    client: "Veda Naturals",   tag: "Motion"    },
+  { id: 4, src: "/KrioskCreta.video/4.mp4", poster: "https://picsum.photos/seed/kr4/400/711", title: "Packaging Reveal", client: "Tatva Hotels",    tag: "Packaging" },
+  { id: 5, src: "/KrioskCreta.video/5.mp4", poster: "https://picsum.photos/seed/kr5/400/711", title: "Social Content",   client: "Zeal Fitness",    tag: "Social"    },
+  { id: 6, src: "/KrioskCreta.video/6.mp4", poster: "https://picsum.photos/seed/kr6/400/711", title: "Event Highlight",  client: "Fusion Events",   tag: "Events"    },
 ];
 
-// ── Styles ─────────────────────────────────────────────────────────────────
-const GALLERY_CSS = `
-  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400;1,700&family=DM+Sans:wght@400;500;600&family=Cormorant+Garamond:ital,wght@1,400;1,600&display=swap');
+/* ── adjust if your navbar height differs ── */
+const NAV_H = 64;
 
-  .g-scroll-wrapper {
+const CSS = `
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400;1,700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=Cormorant+Garamond:ital,wght@1,400;1,600&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  .gs-scroll-wrapper {
     position: relative;
-    height: calc(${REELS.length + 1} * 100vh);
+    height: calc(${REELS.length} * (100vh - ${NAV_H}px));
   }
 
-  .g-section {
+  /* sticky panel sits just below the navbar */
+  .gs-sticky {
     position: sticky;
-    top: 0;
-    height: 100vh;
+    top: ${NAV_H}px;
+    height: calc(100vh - ${NAV_H}px);
+    height: calc(100dvh - ${NAV_H}px);
     overflow: hidden;
-    background-color: #f7f4ef;
-    display: flex;
-    align-items: center;
-    max-width: 100vw;
-    will-change: transform;
+    background: #f7f4ef;
   }
-  .g-section::before {
-    content: ""; position: absolute; inset: 0;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 300 300' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.72' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
-    pointer-events: none; z-index: 0; opacity: 0.65;
-  }
-  .g-section::after {
-    content: ""; position: absolute; inset: 0;
+  .gs-sticky::before {
+    content: "";
+    position: absolute;
+    inset: 0;
     background:
-      radial-gradient(ellipse 60% 50% at 0% 0%,    rgba(93,114,97,0.08) 0%, transparent 55%),
-      radial-gradient(ellipse 50% 40% at 100% 100%, rgba(93,114,97,0.07) 0%, transparent 50%);
-    pointer-events: none; z-index: 0;
-  }
-  .g-inner {
-    position: relative; z-index: 1;
-    max-width: 1280px; margin: 0 auto; padding: 0 40px;
-    width: 100%;
-    box-sizing: border-box;
-  }
-  @media (max-width: 640px) { .g-inner { padding: 0 18px; } }
-
-  .g-header {
-    display: flex; align-items: flex-end;
-    justify-content: space-between; gap: 24px; flex-wrap: wrap;
-    margin-bottom: 48px;
-  }
-  .g-eyebrow { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
-  .g-eyebrow-bar { height: 1px; width: 48px; background: #5d7261; }
-  .g-eyebrow-txt {
-    font-family: 'DM Sans', sans-serif;
-    font-size: 11px; font-weight: 500;
-    letter-spacing: 0.26em; text-transform: uppercase; color: #5d7261;
-  }
-  .g-h2 {
-    font-family: 'Playfair Display', Georgia, serif;
-    font-size: clamp(30px, 4vw, 52px);
-    font-weight: 700; color: #1a1a1a;
-    line-height: 1.0; letter-spacing: -0.02em;
-  }
-  .g-h2 em { color: #5d7261; font-style: italic; }
-
-  .g-scroll-progress {
-    position: fixed;
-    top: 0; left: 0; right: 0;
-    height: 2px;
-    background: rgba(93,114,97,0.15);
-    z-index: 100;
+      radial-gradient(ellipse 55% 60% at 0% 0%,    rgba(93,114,97,0.07) 0%, transparent 60%),
+      radial-gradient(ellipse 45% 50% at 100% 100%, rgba(93,114,97,0.06) 0%, transparent 55%);
     pointer-events: none;
-    opacity: 0;
-    transition: opacity 0.3s;
+    z-index: 0;
   }
-  .g-scroll-progress.visible { opacity: 1; }
-  .g-scroll-progress-bar {
+
+  .gs-layout {
+    position: relative;
+    z-index: 1;
+    width: 100%;
     height: 100%;
-    background: linear-gradient(90deg, #5d7261, #8aaa8e);
-    transition: width 0.15s linear;
+    display: flex;
+    align-items: stretch;
   }
 
-  .g-body {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 64px;
-    align-items: center;
-  }
-  @media (max-width: 900px) {
-    .g-body { grid-template-columns: 1fr; gap: 32px; }
-  }
-  @media (max-width: 640px) {
-    .g-body { gap: 24px; }
-  }
-
-  .vs-wrapper {
-    position: relative;
-    height: 500px;
+  /* ── LEFT column ── */
+  .gs-left {
+    flex: 0 0 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-  }
-  @media (max-width: 640px) {
-    .vs-wrapper { height: 420px; }
+    gap: 18px;
+    padding: 32px 24px 32px 48px;
   }
 
-  .vs-stage {
-    position: relative;
-    width: 240px;
-    height: 400px;
+  /* ── RIGHT column ── */
+  .gs-right {
+    flex: 1;
     display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 40px 48px 40px 36px;
+    border-left: 1px solid rgba(93,114,97,0.10);
+    overflow: hidden;
+  }
+
+  /* ── vertical dot nav ── */
+  .gs-dots {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    align-items: center;
+    flex-shrink: 0;
+  }
+  .gs-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 100px;
+    background: rgba(93,114,97,0.22);
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    transition: height 0.35s ease, background 0.35s ease;
+  }
+  .gs-dot.active           { height: 26px; background: #5d7261; }
+  .gs-dot:hover:not(.active) { background: rgba(93,114,97,0.45); }
+
+  /* ── horizontal dot nav (mobile only) ── */
+  .gs-dots-h {
+    display: none;
+    flex-direction: row;
+    gap: 9px;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
   }
-  @media (max-width: 360px) {
-    .vs-stage { width: 200px; height: 340px; }
-  }
+  .gs-dots-h .gs-dot        { width: 5px;  height: 5px; }
+  .gs-dots-h .gs-dot.active { width: 26px; height: 5px; }
 
-  .vs-card { position: absolute; cursor: grab; }
-  .vs-card:active { cursor: grabbing; }
-  .vs-card.is-peek { cursor: pointer; }
-
-  .vs-frame {
+  /* ── reel card ── */
+  .gs-card {
     position: relative;
-    width: 220px;
-    height: 390px;
+    height: min(82vh, 640px);
+    aspect-ratio: 9 / 16;
     border-radius: 20px;
     overflow: hidden;
-    background: #ede8e0;
-    /* GPU layer promotion for smooth card transforms */
-    will-change: transform;
-    transform: translateZ(0);
-  }
-  @media (max-width: 360px) {
-    .vs-frame { width: 185px; height: 330px; }
+    background: #111;
+    flex-shrink: 0;
+    box-shadow:
+      0 32px 72px -16px rgba(26,26,26,0.30),
+      0 0 0 1px rgba(93,114,97,0.09);
   }
 
-  .vs-media {
-    position: absolute; inset: 0;
-    width: 100%; height: 100%;
+  /* video always fills the card; poster shows until play starts */
+  .gs-card-media {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
     object-fit: cover;
-    display: block;
   }
+  /* fade-in when video is ready */
+  .gs-card-media.ready { animation: gs-fadein 0.4s ease forwards; }
+  @keyframes gs-fadein { from { opacity: 0 } to { opacity: 1 } }
 
-  /* Cross-fade overlay for smooth video→video transitions */
-  .vs-media-transition {
-    position: absolute; inset: 0;
-    width: 100%; height: 100%;
-    object-fit: cover;
-    display: block;
-    opacity: 0;
-    transition: opacity 0.35s ease;
+  .gs-card-vignette {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      to bottom,
+      rgba(0,0,0,0.04) 0%,
+      transparent 28%,
+      transparent 50%,
+      rgba(0,0,0,0.62) 100%
+    );
     pointer-events: none;
+    z-index: 2;
   }
-  .vs-media-transition.show { opacity: 1; }
-
-  .vs-sheen {
-    position: absolute; inset: 0; z-index: 2;
-    background: linear-gradient(160deg, rgba(255,255,255,0.12) 0%, transparent 50%);
-    pointer-events: none; border-radius: 20px;
-  }
-  .vs-badge {
-    position: absolute; top: 12px; left: 12px; z-index: 5;
+  .gs-card-badge {
+    position: absolute;
+    top: 14px; left: 14px;
+    z-index: 5;
     font-family: 'DM Sans', sans-serif;
     font-size: 9px; font-weight: 600;
-    letter-spacing: 0.16em; text-transform: uppercase; color: #5d7261;
-    background: rgba(247,244,239,0.92);
-    padding: 4px 10px; border-radius: 100px; backdrop-filter: blur(4px);
+    letter-spacing: 0.18em; text-transform: uppercase;
+    color: rgba(255,255,255,0.92);
+    background: rgba(255,255,255,0.15);
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.2);
+    padding: 4px 10px; border-radius: 100px;
   }
-  .vs-grad {
-    position: absolute; inset: 0; z-index: 3;
-    background: linear-gradient(to bottom, transparent 55%, rgba(26,26,26,0.78) 100%);
-    pointer-events: none;
-  }
-  .vs-label {
-    position: absolute; bottom: 0; left: 0; right: 0;
-    padding: 10px 14px 14px; z-index: 5;
-    display: flex; flex-direction: column; gap: 2px;
-  }
-  .vs-lbl-client {
+  .gs-card-counter {
+    position: absolute;
+    top: 14px; right: 14px;
+    z-index: 5;
     font-family: 'DM Sans', sans-serif;
-    font-size: 8px; font-weight: 500;
-    letter-spacing: 0.2em; text-transform: uppercase;
-    color: rgba(247,244,239,0.6);
+    font-size: 10px; color: rgba(255,255,255,0.5);
+    letter-spacing: 0.06em;
   }
-  .vs-lbl-title {
-    font-family: 'DM Sans', sans-serif;
-    font-size: 12px; font-weight: 600; color: #f7f4ef;
-  }
+  .gs-card-counter strong { color: #fff; font-weight: 600; }
 
-  .vs-mute {
-    position: absolute; bottom: 46px; right: 12px; z-index: 6;
-    width: 28px; height: 28px; border-radius: 50%;
-    background: rgba(247,244,239,0.18); backdrop-filter: blur(6px);
-    border: 1px solid rgba(247,244,239,0.35);
+  /* mute / unmute button */
+  .gs-mute {
+    position: absolute;
+    bottom: 52px; right: 12px;
+    z-index: 6;
+    width: 32px; height: 32px; border-radius: 50%;
+    background: rgba(255,255,255,0.15);
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.2);
     display: flex; align-items: center; justify-content: center;
-    cursor: pointer; color: #f7f4ef;
+    cursor: pointer; color: #fff;
     transition: background 0.2s;
   }
-  .vs-mute:hover { background: rgba(247,244,239,0.30); }
+  .gs-mute:hover { background: rgba(255,255,255,0.28); }
 
-  .vs-counter {
-    position: absolute; left: 0; top: 50%; transform: translateY(-50%);
-    display: flex; flex-direction: column; align-items: center; gap: 8px;
+  /* unmuted pulse ring so user knows audio is on */
+  .gs-mute.unmuted::after {
+    content: "";
+    position: absolute;
+    inset: -4px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(255,255,255,0.45);
+    animation: gs-pulse 1.8s ease-in-out infinite;
   }
-  .vs-count-cur {
-    font-family: 'Playfair Display', Georgia, serif;
-    font-size: 36px; font-weight: 300; color: #1a1a1a; line-height: 1;
-    letter-spacing: -0.02em;
-    transition: opacity 0.2s ease;
-  }
-  .vs-count-rule { width: 1px; height: 28px; background: rgba(93,114,97,0.25); }
-  .vs-count-tot {
-    font-family: 'DM Sans', sans-serif;
-    font-size: 12px; color: #6b6b6b;
+  @keyframes gs-pulse {
+    0%,100% { transform: scale(1);   opacity: 0.7; }
+    50%      { transform: scale(1.2); opacity: 0;   }
   }
 
-  .vs-dots {
-    position: absolute; right: 0; top: 50%; transform: translateY(-50%);
-    display: flex; flex-direction: column; gap: 8px;
+  .gs-card-label {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    padding: 8px 14px 16px;
+    z-index: 5;
+    display: flex; flex-direction: column; gap: 2px;
   }
-  .vs-dot {
-    width: 6px; height: 6px; border-radius: 100px;
-    background: rgba(93,114,97,0.3);
-    border: none; cursor: pointer;
-    transition: height 0.3s ease, background 0.3s ease;
-  }
-  .vs-dot.active { height: 22px; background: #5d7261; }
-  .vs-dot:hover:not(.active) { background: rgba(93,114,97,0.55); }
-
-  .vs-hint {
-    position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
-    display: flex; flex-direction: column; align-items: center; gap: 6px;
-    color: #6b6b6b;
+  .gs-card-client {
     font-family: 'DM Sans', sans-serif;
     font-size: 9px; font-weight: 500;
     letter-spacing: 0.2em; text-transform: uppercase;
+    color: rgba(255,255,255,0.48);
+  }
+  .gs-card-title {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px; font-weight: 600; color: #fff;
   }
 
-  .pd-wrap { display: flex; flex-direction: column; gap: 20px; }
-  .pd-num {
-    font-family: 'Playfair Display', Georgia, serif;
-    font-size: 80px; font-weight: 700; line-height: 1;
-    color: rgba(93,114,97,0.10); letter-spacing: -0.04em;
+  /* per-reel progress bar at top of card */
+  .gs-card-progress {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: rgba(255,255,255,0.14);
+    z-index: 7;
   }
-  .pd-tag {
+  .gs-card-progress-bar {
+    height: 100%; background: #fff;
+    transition: width 0.2s linear;
+  }
+
+  @keyframes nudge-up   { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-5px)} }
+  @keyframes nudge-down { 0%,100%{transform:translateY(0)} 50%{transform:translateY(5px)}  }
+  .gs-hint-up, .gs-hint-down {
+    position: absolute; left: 50%; transform: translateX(-50%);
+    z-index: 6; color: rgba(255,255,255,0.35); pointer-events: none;
+  }
+  .gs-hint-up   { top: 40px; }
+  .gs-hint-down { bottom: 40px; }
+  .gs-hint-up   svg { animation: nudge-up   1.7s ease-in-out infinite; }
+  .gs-hint-down svg { animation: nudge-down 1.7s ease-in-out infinite; }
+
+  /* ── right panel typography ── */
+  .gs-eyebrow { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+  .gs-eyebar  { height: 1px; width: 36px; background: #5d7261; flex-shrink: 0; }
+  .gs-eyetxt  {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 10px; font-weight: 500;
+    letter-spacing: 0.26em; text-transform: uppercase; color: #5d7261;
+  }
+  .gs-section-h {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: clamp(28px, 3vw, 48px);
+    font-weight: 700; color: #1a1a1a;
+    line-height: 1.05; letter-spacing: -0.025em;
+    margin-bottom: 32px;
+  }
+  .gs-section-h em { color: #5d7261; font-style: italic; }
+  .gs-divider { width: 100%; height: 1px; background: rgba(93,114,97,0.12); margin-bottom: 28px; }
+
+  .gs-detail { display: flex; flex-direction: column; gap: 10px; }
+  .gs-detail-num {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 60px; font-weight: 700; line-height: 1;
+    color: rgba(93,114,97,0.09); letter-spacing: -0.04em; margin-bottom: -4px;
+  }
+  .gs-detail-tag {
     display: inline-block;
     font-family: 'DM Sans', sans-serif;
     font-size: 10px; font-weight: 600;
-    letter-spacing: 0.22em; text-transform: uppercase; color: #5d7261;
-    border: 1px solid rgba(93,114,97,0.4);
-    padding: 5px 14px; border-radius: 100px; width: fit-content;
+    letter-spacing: 0.2em; text-transform: uppercase; color: #5d7261;
+    border: 1px solid rgba(93,114,97,0.38);
+    padding: 4px 13px; border-radius: 100px; width: fit-content;
   }
-  .pd-title {
+  .gs-detail-title {
     font-family: 'Playfair Display', Georgia, serif;
-    font-size: clamp(28px, 3vw, 40px);
-    font-weight: 700; color: #1a1a1a;
-    line-height: 1.1; letter-spacing: -0.02em; margin: 0;
+    font-size: clamp(20px, 2vw, 32px);
+    font-weight: 700; color: #1a1a1a; line-height: 1.1; letter-spacing: -0.02em;
   }
-  .pd-client {
+  .gs-detail-client {
     font-family: 'DM Sans', sans-serif;
-    font-size: 12px; font-weight: 500;
-    letter-spacing: 0.12em; text-transform: uppercase; color: #5d7261; margin: 0;
+    font-size: 11px; font-weight: 500;
+    letter-spacing: 0.16em; text-transform: uppercase; color: #5d7261;
   }
-  .pd-body {
+  .gs-detail-body {
     font-family: 'DM Sans', sans-serif;
-    font-size: 15px; line-height: 1.7; color: #5a5a5a;
-    margin: 0; max-width: 420px;
+    font-size: 14px; line-height: 1.72; color: #5a5a5a;
   }
-  .pd-cta {
+  .gs-detail-cta {
     display: inline-flex; align-items: center; gap: 10px;
     font-family: 'DM Sans', sans-serif;
     font-size: 13px; font-weight: 500; letter-spacing: 0.06em;
     color: #5d7261; text-decoration: none;
-    padding: 13px 24px;
-    border: 1.5px solid #5d7261; border-radius: 100px;
-    width: fit-content; overflow: hidden; position: relative;
-    transition: color 0.35s;
+    padding: 12px 24px; border: 1.5px solid #5d7261;
+    border-radius: 100px; width: fit-content;
+    position: relative; overflow: hidden; transition: color 0.35s; margin-top: 6px;
   }
-  .pd-cta::before {
-    content: ""; position: absolute; inset: 0;
-    background: #5d7261; border-radius: 100px;
+  .gs-detail-cta::before {
+    content: ""; position: absolute; inset: 0; background: #5d7261; border-radius: 100px;
     transform: scaleX(0); transform-origin: left;
     transition: transform 0.42s cubic-bezier(0.22,1,0.36,1); z-index: -1;
   }
-  .pd-cta:hover { color: white; }
-  .pd-cta:hover::before { transform: scaleX(1); }
+  .gs-detail-cta:hover { color: #fff; }
+  .gs-detail-cta:hover::before { transform: scaleX(1); }
 
-  .g-footer-wrap {
-    background-color: #f7f4ef;
-    padding: 0 40px;
+  /* progress bar just below the navbar */
+  .gs-prog {
+    position: fixed;
+    top: ${NAV_H}px;
+    left: 0; right: 0;
+    height: 2px;
+    background: rgba(93,114,97,0.12);
+    z-index: 100; pointer-events: none;
+    opacity: 0; transition: opacity 0.3s;
   }
-  @media (max-width: 640px) { .g-footer-wrap { padding: 0 18px; } }
+  .gs-prog.on { opacity: 1; }
+  .gs-prog-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #5d7261, #8aaa8e);
+    transition: width 0.12s linear;
+  }
 
-  .g-footer {
+  /* footer */
+  .gs-footer { background: #f7f4ef; padding: 0 48px; }
+  .gs-footer-inner {
     display: flex; align-items: center; gap: 20px;
-    max-width: 1280px; margin: 0 auto;
-    padding: 32px 0 40px;
+    padding: 24px 0 32px;
+    border-top: 1px solid rgba(93,114,97,0.10);
   }
-  .g-rule { flex: 1; height: 1px; background: rgba(93,114,97,0.15); }
-  .g-tagline {
+  .gs-rule { flex: 1; height: 1px; background: rgba(93,114,97,0.12); }
+  .gs-tagline {
     font-family: 'Cormorant Garamond', Georgia, serif;
-    font-size: 14px; font-style: italic; color: #6b6b6b;
-    white-space: nowrap; letter-spacing: 0.02em;
+    font-size: 14px; font-style: italic; color: #888;
+    letter-spacing: 0.02em; white-space: nowrap;
   }
 
-  .vs-progress {
-    position: absolute; bottom: 0; left: 0; right: 0; height: 2px; z-index: 7;
-    background: rgba(255,255,255,0.15);
-  }
-  .vs-progress-bar {
-    height: 100%; background: #5d7261;
-    transition: width 0.25s linear;
+  /* tablet */
+  @media (max-width: 900px) {
+    .gs-left  { padding: 24px 16px 24px 28px; gap: 14px; flex: 0 0 48%; }
+    .gs-right { padding: 28px 28px 28px 24px; }
+    .gs-card  { height: min(76vh, 520px); }
+    .gs-section-h  { margin-bottom: 20px; }
+    .gs-divider    { margin-bottom: 18px; }
+    .gs-detail-num { font-size: 48px; }
+    .gs-footer { padding: 0 28px; }
   }
 
-  .g-continue-nudge {
-    position: absolute;
-    bottom: 24px; right: 40px;
-    display: flex; align-items: center; gap: 8px;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 10px; font-weight: 500;
-    letter-spacing: 0.18em; text-transform: uppercase;
-    color: #5d7261;
-    opacity: 0; transform: translateY(8px);
-    transition: opacity 0.5s, transform 0.5s;
-    pointer-events: none;
+  /* mobile — video card only, right panel hidden */
+  @media (max-width: 600px) {
+    .gs-layout { flex-direction: column; align-items: stretch; }
+    .gs-left {
+      flex: 1;
+      flex-direction: column;
+      padding: 20px 20px 16px;
+      gap: 14px;
+      align-items: center;
+      justify-content: center;
+    }
+    .gs-right  { display: none; }
+    .gs-dots   { display: none; }
+    .gs-dots-h { display: flex; }
+    .gs-card   { height: min(78vh, 560px); border-radius: 20px; }
+    .gs-footer { padding: 0 20px; }
+    .gs-tagline { white-space: normal; text-align: center; }
+    .gs-footer-inner { flex-direction: column; gap: 10px; }
   }
-  .g-continue-nudge.show { opacity: 1; transform: translateY(0); }
-
-  @media (max-width: 640px) {
-    .g-tagline { font-size: 12px; white-space: normal; text-align: center; }
-    .g-footer  { flex-direction: column; gap: 12px; }
-    .g-header  { margin-bottom: 28px; }
-    .g-continue-nudge { right: 18px; }
+  @media (max-width: 380px) {
+    .gs-card { height: min(72vh, 480px); }
   }
 `;
 
-// ── Client-only style injector ─────────────────────────────────────────────
-function GalleryStyles() {
+/* ─────────────────────────────────────────
+   Style injector (client-only to avoid SSR mismatch)
+───────────────────────────────────────── */
+function Styles(): JSX.Element | null {
   const [mounted, setMounted] = useState(false);
-  useEffect(() => { setMounted(true); }, []);
+  useEffect(() => setMounted(true), []);
   if (!mounted) return null;
-  return <style dangerouslySetInnerHTML={{ __html: GALLERY_CSS }} />;
+  return <style dangerouslySetInnerHTML={{ __html: CSS }} />;
 }
 
-// ── Single card ────────────────────────────────────────────────────────────
-function ReelCard({
-  reel,
-  isCurrent,
-  isHovered,
-  muted,
-  isSectionActive,
-  onMuteToggle,
-  onHoverStart,
-  onHoverEnd,
-  onClick,
-  style,
-  drag,
-  dragConstraints,
-  dragElastic,
-  onDragEnd,
-}: {
-  reel: (typeof REELS)[0];
-  isCurrent: boolean;
-  isHovered: boolean;
+/* ─────────────────────────────────────────
+   ReelCard
+   KEY FIXES:
+   1. Always renders <video> (never swaps to <img>) so there
+      is no race between element mount and play().
+   2. Resets + plays when reel.src or isActive changes.
+   3. Pauses on tab-hide, resumes on tab-show (if still active).
+   4. muted state is applied imperatively via ref (React's
+      `muted` prop doesn't update after first render).
+───────────────────────────────────────── */
+interface ReelCardProps {
+  reel: Reel;
+  index: number;
+  total: number;
+  isActive: boolean;
   muted: boolean;
-  isSectionActive: boolean;
   onMuteToggle: () => void;
-  onHoverStart: () => void;
-  onHoverEnd: () => void;
-  onClick: () => void;
-  style: TargetAndTransition;
-  drag: "y" | false;
-  dragConstraints: object;
-  dragElastic: number;
-  onDragEnd: (e: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => void;
-}) {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const [progress, setProgress] = useState(0);
-  const wasCurrentRef = useRef(false);
+}
 
-  // ── Play / pause ─────────────────────────────────────────────────────────
-  // KEY FIX: only reset currentTime when freshly becoming current (not on every render).
-  // Use a ref to track the previous isCurrent state so we don't re-seek on
-  // isSectionActive toggling (which caused visible stutter).
+function ReelCard({ reel, index, total, isActive, muted, onMuteToggle }: ReelCardProps) {
+  const videoRef  = useRef<HTMLVideoElement>(null);
+  const [progress, setProgress] = useState(0);
+  const isActiveRef = useRef(isActive); // stable ref for visibility handler
+  isActiveRef.current = isActive;
+
+  /* ── 1. Play / pause when section enters or leaves view ── */
   useEffect(() => {
     const v = videoRef.current;
     if (!v) return;
-
-    const justBecameCurrent = isCurrent && !wasCurrentRef.current;
-    wasCurrentRef.current = isCurrent;
-
-    if (isCurrent && isSectionActive) {
-      // Only reset to start when the card is *first* selected, not on re-renders.
-      if (justBecameCurrent) v.currentTime = 0;
-      v.play().catch(() => {});
+    if (isActive) {
+      /* Reset progress bar and play from start */
+      setProgress(0);
+      v.currentTime = 0;
+      const promise = v.play();
+      if (promise !== undefined) {
+        promise.catch(() => {
+          /* Autoplay blocked — happens when not muted.
+             Fall back: ensure muted then retry. */
+          v.muted = true;
+          v.play().catch(() => {});
+        });
+      }
     } else {
       v.pause();
-      // Reset time on deselect so next play starts fresh, but deferred
-      // so the pause takes effect first (avoids a flash of old frame).
-      if (!isCurrent) {
-        const timer = setTimeout(() => { if (v) v.currentTime = 0; }, 100);
-        return () => clearTimeout(timer);
-      }
     }
-  }, [isCurrent, isSectionActive]);
+  }, [isActive]);
 
-  // ── Audio ─────────────────────────────────────────────────────────────────
+  /* ── 2. React when the reel itself changes (scroll advances) ── */
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v || !isActive) return;
+    setProgress(0);
+    v.currentTime = 0;
+    const promise = v.play();
+    if (promise !== undefined) {
+      promise.catch(() => {
+        v.muted = true;
+        v.play().catch(() => {});
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reel.src]);
+
+  /* ── 3. Muted state — must be set imperatively in React ── */
+  useEffect(() => {
+    const v = videoRef.current;
+    if (v) v.muted = muted;
+  }, [muted]);
+
+  /* ── 4. Tab visibility — stop audio when user leaves, resume on return ── */
+  useEffect(() => {
+    const handleVisibility = () => {
+      const v = videoRef.current;
+      if (!v) return;
+      if (document.hidden) {
+        v.pause();
+      } else if (isActiveRef.current) {
+        v.play().catch(() => {});
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => document.removeEventListener("visibilitychange", handleVisibility);
+  }, []); // mount / unmount only — isActiveRef keeps it fresh
+
+  /* ── 5. Progress bar ── */
   useEffect(() => {
     const v = videoRef.current;
     if (!v) return;
-    v.muted = (isCurrent && isSectionActive) ? muted : true;
-  }, [muted, isCurrent, isSectionActive]);
-
-  // ── Progress bar ──────────────────────────────────────────────────────────
-  useEffect(() => {
-    const v = videoRef.current;
-    if (!v || !isCurrent) return;
     const onTime = () => {
       if (v.duration) setProgress((v.currentTime / v.duration) * 100);
     };
     v.addEventListener("timeupdate", onTime);
     return () => v.removeEventListener("timeupdate", onTime);
-  }, [isCurrent]);
-
-  const shadow = isCurrent || isHovered
-    ? "0 28px 56px -12px rgba(26,26,26,0.28), 0 0 0 1px rgba(93,114,97,0.18)"
-    : "0 10px 28px -10px rgba(26,26,26,0.12)";
+  }, []);
 
   return (
-    <motion.div
-      className="vs-card"
-      animate={style}
-      // Smoother spring: higher stiffness + damping = snappier with less oscillation
-      transition={{ type: "spring", stiffness: 380, damping: 36, mass: 0.75 }}
-      drag={drag}
-      dragConstraints={dragConstraints}
-      dragElastic={dragElastic}
-      onDragEnd={onDragEnd}
-      onHoverStart={onHoverStart}
-      onHoverEnd={onHoverEnd}
-      onClick={onClick}
-      style={{ transformStyle: "preserve-3d", willChange: "transform" }}
-    >
-      <div className="vs-frame" style={{ boxShadow: shadow, transition: "box-shadow 0.35s ease" }}>
-        <div className="vs-sheen" />
+    <div className="gs-card">
+      {/* progress bar */}
+      <div className="gs-card-progress">
+        <div className="gs-card-progress-bar" style={{ width: `${progress}%` }} />
+      </div>
 
-        {/* Always render the video for the current card */}
-        {isCurrent && (
-          <video
-            ref={videoRef}
-            className="vs-media"
-            src={reel.src}
-            poster={reel.poster}
-            muted={muted}
-            loop
-            playsInline
-            preload="auto"
-            draggable={false}
-          />
-        )}
+      {/*
+        Always render <video> — never swap to <img>.
+        The native `poster` attribute shows the thumbnail until the video plays,
+        giving the same visual effect without the conditional render race condition.
+        `muted` attribute is required for browser autoplay policy.
+      */}
+      <video
+        ref={videoRef}
+        key={reel.src}           /* force remount when src changes so poster shows correctly */
+        className="gs-card-media"
+        src={reel.src}
+        poster={reel.poster}
+        muted                    /* always start muted for autoplay; toggled imperatively via ref */
+        loop
+        playsInline
+        preload="auto"
+        draggable={false}
+      />
 
-        {/* Poster for non-current cards */}
-        {!isCurrent && (
-          <img
-            src={reel.poster}
-            alt={reel.title}
-            className="vs-media"
-            draggable={false}
-            loading="lazy"
-          />
-        )}
+      <div className="gs-card-vignette" />
+      <span className="gs-card-badge">{reel.tag}</span>
+      <span className="gs-card-counter">
+        <strong>{String(index + 1).padStart(2, "0")}</strong>
+        {" / "}
+        {String(total).padStart(2, "0")}
+      </span>
 
-        <span className="vs-badge">{reel.tag}</span>
-        <div className="vs-grad" />
-
-        <div className="vs-label">
-          <span className="vs-lbl-client">{reel.client}</span>
-          <span className="vs-lbl-title">{reel.title}</span>
+      {index > 0 && (
+        <div className="gs-hint-up">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 19V5M5 12l7-7 7 7" />
+          </svg>
         </div>
+      )}
+      {index < total - 1 && (
+        <div className="gs-hint-down">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 5v14M19 12l-7 7-7-7" />
+          </svg>
+        </div>
+      )}
 
-        {isCurrent && (
-          <button
-            className="vs-mute"
-            onClick={(e) => { e.stopPropagation(); onMuteToggle(); }}
-            aria-label={muted ? "Unmute" : "Mute"}
-          >
-            {muted ? (
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
-                <line x1="23" y1="9" x2="17" y2="15" />
-                <line x1="17" y1="9" x2="23" y2="15" />
-              </svg>
-            ) : (
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
-                <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
-                <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
-              </svg>
-            )}
-          </button>
-        )}
-
-        {isCurrent && (
-          <div className="vs-progress">
-            <div className="vs-progress-bar" style={{ width: `${progress}%` }} />
-          </div>
-        )}
-      </div>
-    </motion.div>
-  );
-}
-
-// ── Vertical Image Stack ───────────────────────────────────────────────────
-function VerticalImageStack({
-  currentIndex,
-  setCurrentIndex,
-  isSectionActive,
-}: {
-  currentIndex: number;
-  setCurrentIndex: (i: number | ((p: number) => number)) => void;
-  isSectionActive: boolean;
-}) {
-  const total = REELS.length;
-  const [muted, setMuted] = useState(false);
-  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
-
-  const lastNav = useRef(0);
-  const COOLDOWN = 350; // slightly tighter for snappier feel
-
-  const navigate = useCallback(
-    (dir: number) => {
-      const now = Date.now();
-      if (now - lastNav.current < COOLDOWN) return;
-      lastNav.current = now;
-      setCurrentIndex((prev) => {
-        if (dir > 0) return prev === total - 1 ? prev : prev + 1;
-        return prev === 0 ? prev : prev - 1;
-      });
-    },
-    [total, setCurrentIndex],
-  );
-
-  const handleDragEnd = (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-    if (info.offset.y < -50) navigate(1);
-    else if (info.offset.y > 50) navigate(-1);
-  };
-
-  const getCardStyle = (index: number) => {
-    const diff = index - currentIndex;
-    if (diff === 0)  return { y: 0,    scale: 1,    opacity: 1,   zIndex: 5, rotateX: 0   };
-    if (diff === -1) return { y: -148, scale: 0.84, opacity: 0.6, zIndex: 4, rotateX: 8   };
-    if (diff === -2) return { y: -256, scale: 0.72, opacity: 0.3, zIndex: 3, rotateX: 15  };
-    if (diff === 1)  return { y: 148,  scale: 0.84, opacity: 0.6, zIndex: 4, rotateX: -8  };
-    if (diff === 2)  return { y: 256,  scale: 0.72, opacity: 0.3, zIndex: 3, rotateX: -15 };
-    return { y: diff > 0 ? 380 : -380, scale: 0.6, opacity: 0, zIndex: 0, rotateX: diff > 0 ? -20 : 20 };
-  };
-
-  const isVisible = (index: number) => Math.abs(index - currentIndex) <= 2;
-
-  return (
-    <div className="vs-wrapper">
-      {/* Counter */}
-      <div className="vs-counter">
-        <motion.span
-          key={currentIndex}
-          className="vs-count-cur"
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.25, ease: "easeOut" }}
-        >
-          {String(currentIndex + 1).padStart(2, "0")}
-        </motion.span>
-        <div className="vs-count-rule" />
-        <span className="vs-count-tot">{String(total).padStart(2, "0")}</span>
-      </div>
-
-      {/* Card stack */}
-      <div className="vs-stage" style={{ perspective: "1200px" }}>
-        {REELS.map((reel, index) => {
-          if (!isVisible(index)) return null;
-          const isCurrent = index === currentIndex;
-          const isHovered = hoveredIndex === index;
-          const s = getCardStyle(index);
-
-          const hoverY       = isCurrent ? s.y       : s.y * 0.55;
-          const hoverScale   = isCurrent ? s.scale   : s.scale * 1.10;
-          const hoverOpacity = isCurrent ? s.opacity : Math.min(s.opacity + 0.25, 1);
-          const hoverZ       = isCurrent ? s.zIndex  : 6;
-
-          return (
-            <ReelCard
-              key={reel.id}
-              reel={reel}
-              isCurrent={isCurrent}
-              isHovered={isHovered}
-              muted={muted}
-              isSectionActive={isSectionActive}
-              onMuteToggle={() => setMuted((m) => !m)}
-              style={{
-                y:       isHovered ? hoverY       : s.y,
-                scale:   isHovered ? hoverScale   : s.scale,
-                opacity: isHovered ? hoverOpacity : s.opacity,
-                rotateX: isHovered ? 0            : s.rotateX,
-                zIndex:  isHovered ? hoverZ       : s.zIndex,
-              }}
-              drag={isCurrent ? "y" : false}
-              dragConstraints={{ top: 0, bottom: 0 }}
-              dragElastic={0.2}
-              onDragEnd={handleDragEnd}
-              onHoverStart={() => { if (!isCurrent) setHoveredIndex(index); }}
-              onHoverEnd={()   => { if (!isCurrent) setHoveredIndex(null);  }}
-              onClick={() => { if (!isCurrent) setCurrentIndex(index); }}
-            />
-          );
-        })}
-      </div>
-
-      {/* Dots */}
-      <div className="vs-dots">
-        {REELS.map((_, i) => (
-          <button
-            key={i}
-            className={`vs-dot${i === currentIndex ? " active" : ""}`}
-            onClick={() => setCurrentIndex(i)}
-            aria-label={`Go to project ${i + 1}`}
-          />
-        ))}
-      </div>
-
-      {/* Scroll hint */}
-      <motion.div
-        className="vs-hint"
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.9, duration: 0.6 }}
+      {/* mute / unmute toggle — pulse ring when audio is on */}
+      <button
+        className={`gs-mute${!muted ? " unmuted" : ""}`}
+        onClick={onMuteToggle}
+        aria-label={muted ? "Unmute" : "Mute"}
       >
-        <motion.svg
-          animate={{ y: [0, 6, 0] }}
-          transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
-          width="18" height="18" viewBox="0 0 24 24" fill="none"
-          stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"
-        >
-          <path d="M12 5v14M19 12l-7 7-7-7" />
-        </motion.svg>
-        <span>Scroll to explore</span>
-      </motion.div>
+        {muted ? (
+          /* muted icon */
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+            <line x1="23" y1="9" x2="17" y2="15" />
+            <line x1="17" y1="9" x2="23" y2="15" />
+          </svg>
+        ) : (
+          /* unmuted icon */
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+            <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+            <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
+          </svg>
+        )}
+      </button>
+
+      <div className="gs-card-label">
+        <span className="gs-card-client">{reel.client}</span>
+        <span className="gs-card-title">{reel.title}</span>
+      </div>
     </div>
   );
 }
 
-// ── Project Detail Panel ───────────────────────────────────────────────────
-function ProjectDetail({ reel, index }: { reel: (typeof REELS)[0]; index: number }) {
+/* ─────────────────────────────────────────
+   ProjectDetail (desktop / tablet only)
+───────────────────────────────────────── */
+function ProjectDetail({ reel, index }: { reel: Reel; index: number }) {
   return (
-    // KEY FIX: removed mode="wait" — now exit and enter animate simultaneously,
-    // eliminating the blocking delay. duration trimmed to 0.32s for snappier feel.
     <AnimatePresence mode="popLayout">
       <motion.div
         key={reel.id}
-        className="pd-wrap"
-        initial={{ opacity: 0, x: 24, filter: "blur(4px)" }}
-        animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}
-        exit={{ opacity: 0, x: -16, filter: "blur(2px)" }}
-        transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
+        className="gs-detail"
+        initial={{ opacity: 0, y: 14, filter: "blur(3px)" }}
+        animate={{ opacity: 1, y: 0,  filter: "blur(0px)" }}
+        exit={{    opacity: 0, y: -10, filter: "blur(2px)" }}
+        transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
         style={{ willChange: "transform, opacity" }}
       >
-        <span className="pd-num">{String(index + 1).padStart(2, "0")}</span>
-        <span className="pd-tag">{reel.tag}</span>
-        <h3 className="pd-title">{reel.title}</h3>
-        <p className="pd-client">Client — {reel.client}</p>
-        <p className="pd-body">
+        <span className="gs-detail-num">{String(index + 1).padStart(2, "0")}</span>
+        <span className="gs-detail-tag">{reel.tag}</span>
+        <h3 className="gs-detail-title">{reel.title}</h3>
+        <p className="gs-detail-client">Client — {reel.client}</p>
+        <p className="gs-detail-body">
           A carefully crafted {reel.tag.toLowerCase()} project that pushed creative
           boundaries and delivered measurable impact for {reel.client}.
         </p>
-        <a href="#contact" className="pd-cta">
+        <a href="#contact" className="gs-detail-cta">
           View Case Study
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M5 12h14M12 5l7 7-7 7" />
@@ -698,132 +597,169 @@ function ProjectDetail({ reel, index }: { reel: (typeof REELS)[0]; index: number
   );
 }
 
-// ── Main Section ───────────────────────────────────────────────────────────
-export default function GallerySection() {
-  const hRef    = useRef(null);
-  const hInView = useInView(hRef, { once: true, margin: "-80px" });
+/* ─────────────────────────────────────────
+   GallerySection — main export
+───────────────────────────────────────── */
+export default function GallerySection(): JSX.Element {
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [muted, setMuted]               = useState(true);  // start muted (browser autoplay requirement)
+  const [scrollProgress, setScrollProgress] = useState(0);
+  const [isActive, setIsActive]         = useState(false);
 
-  const [currentIndex, setCurrentIndex]       = useState(0);
-  const [scrollProgress, setScrollProgress]   = useState(0);
-  const [isSectionActive, setIsSectionActive] = useState(false);
-  const [isLastReel, setIsLastReel]           = useState(false);
-  const scrollWrapperRef = useRef<HTMLDivElement>(null);
-
-  // KEY FIX: debounce the index update from scroll to avoid flooding state.
-  // Progress bar & section-active update immediately; only index is debounced.
-  const pendingIndexRef = useRef<number>(0);
-  const indexTimerRef   = useRef<ReturnType<typeof setTimeout> | null>(null);
-
+  /* ─────────────────────────────────────────
+     IntersectionObserver — determines whether
+     the gallery section is in view (isActive).
+     More reliable than checking rect.top in a
+     scroll handler.
+  ───────────────────────────────────────── */
   useEffect(() => {
-    const handleScroll = () => {
-      const wrapper = scrollWrapperRef.current;
-      if (!wrapper) return;
+    const el = wrapperRef.current;
+    if (!el) return;
 
-      const rect           = wrapper.getBoundingClientRect();
-      const wrapperHeight  = wrapper.offsetHeight;
-      const vh             = window.innerHeight;
-      const scrolledIn     = Math.max(0, -rect.top);
-      const totalScrollable = wrapperHeight - vh;
-      const progress        = Math.min(1, Math.max(0, scrolledIn / totalScrollable));
-      const active          = rect.top <= 0 && rect.bottom >= vh;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        /*
+          The section is "active" (video should play) as long as any part
+          of the tall scroll wrapper overlaps with the viewport below the nav.
+        */
+        setIsActive(entry.isIntersecting);
+      },
+      {
+        rootMargin: `-${NAV_H}px 0px 0px 0px`,
+        threshold: 0,
+      }
+    );
 
-      // These are cheap — update immediately
-      setIsSectionActive(active);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  /* ─────────────────────────────────────────
+     Scroll handler — drives currentIndex and
+     the page-level progress bar.
+  ───────────────────────────────────────── */
+  useEffect(() => {
+    const onScroll = () => {
+      const el = wrapperRef.current;
+      if (!el) return;
+
+      const rect          = el.getBoundingClientRect();
+      const effectiveVH   = window.innerHeight - NAV_H;
+      const totalScrollable = el.offsetHeight - effectiveVH;
+
+      /* how far the user has scrolled into this section */
+      const scrolledIn = Math.max(0, -(rect.top - NAV_H));
+      const progress   = Math.min(1, Math.max(0, scrolledIn / totalScrollable));
+
       setScrollProgress(progress);
 
-      const rawIndex     = Math.floor(progress * REELS.length);
-      const clampedIndex = Math.min(REELS.length - 1, rawIndex);
-
-      // KEY FIX: only fire setCurrentIndex when the index actually changes,
-      // and debounce by ~60ms so rapid scroll events collapse into one update.
-      if (clampedIndex !== pendingIndexRef.current) {
-        pendingIndexRef.current = clampedIndex;
-        if (indexTimerRef.current) clearTimeout(indexTimerRef.current);
-        indexTimerRef.current = setTimeout(() => {
-          setCurrentIndex(clampedIndex);
-          setIsLastReel(clampedIndex === REELS.length - 1);
-        }, 60);
-      }
+      const step = 1 / REELS.length;
+      const idx  = Math.min(REELS.length - 1, Math.floor(progress / step));
+      setCurrentIndex(idx);
     };
 
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    handleScroll();
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-      if (indexTimerRef.current) clearTimeout(indexTimerRef.current);
-    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll(); // run once on mount
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  /* scroll to a specific reel when user clicks a dot */
+  const scrollToReel = useCallback((idx: number) => {
+    const el = wrapperRef.current;
+    if (!el) return;
+    const effectiveVH     = window.innerHeight - NAV_H;
+    const totalScrollable = el.offsetHeight - effectiveVH;
+    const step            = 1 / REELS.length;
+    const targetProgress  = idx * step + step * 0.1;
+    window.scrollTo({ top: el.offsetTop + targetProgress * totalScrollable, behavior: "smooth" });
+  }, []);
+
+  /* unmute handler — browser allows audio after a user gesture */
+  const handleMuteToggle = useCallback(() => {
+    setMuted((m) => !m);
   }, []);
 
   return (
     <>
-      <GalleryStyles />
+      <Styles />
 
-      {/* Top progress bar */}
-      <div className={`g-scroll-progress${isSectionActive ? " visible" : ""}`}>
-        <div
-          className="g-scroll-progress-bar"
-          style={{ width: `${scrollProgress * 100}%` }}
-        />
+      {/* thin progress bar just below the navbar */}
+      <div className={`gs-prog${isActive ? " on" : ""}`}>
+        <div className="gs-prog-fill" style={{ width: `${scrollProgress * 100}%` }} />
       </div>
 
-      {/* Tall scroll wrapper */}
-      <div ref={scrollWrapperRef} className="g-scroll-wrapper">
+      <div ref={wrapperRef} className="gs-scroll-wrapper">
+        <div className="gs-sticky">
+          <div className="gs-layout">
 
-        {/* Sticky section */}
-        <section id="gallery" className="g-section" aria-label="Work gallery">
-          <div className="g-inner">
+            {/* ── LEFT: dots + video card ── */}
+            <div className="gs-left">
 
-            <header className="g-header" ref={hRef}>
-              <motion.div
-                initial={{ opacity: 0, x: -28 }}
-                animate={hInView ? { opacity: 1, x: 0 } : {}}
-                transition={{ duration: 0.75, ease: [0.22, 1, 0.36, 1] }}
-              >
-                <div className="g-eyebrow">
-                  <div className="g-eyebrow-bar" />
-                  <span className="g-eyebrow-txt">Creative Reel · Gallery</span>
-                </div>
-                <h2 className="g-h2">
-                  Work That<br />
-                  <em>Speaks Louder.</em>
-                </h2>
-              </motion.div>
-            </header>
+              {/* vertical dots (desktop / tablet) */}
+              <div className="gs-dots">
+                {REELS.map((_, i) => (
+                  <button
+                    key={i}
+                    className={`gs-dot${i === currentIndex ? " active" : ""}`}
+                    onClick={() => scrollToReel(i)}
+                    aria-label={`Project ${i + 1}`}
+                  />
+                ))}
+              </div>
 
-            <div className="g-body">
-              <motion.div
-                initial={{ opacity: 0, x: -40 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true, margin: "-60px" }}
-                transition={{ duration: 0.75, ease: [0.22, 1, 0.36, 1] }}
-              >
-                <VerticalImageStack
-                  currentIndex={currentIndex}
-                  setCurrentIndex={setCurrentIndex}
-                  isSectionActive={isSectionActive}
-                />
-              </motion.div>
+              {/*
+                Only ONE ReelCard is ever in the DOM at a time.
+                key={currentIndex} forces a full remount when the reel
+                changes, so the video element is fresh and poster shows.
+              */}
+              <ReelCard
+                key={currentIndex}
+                reel={REELS[currentIndex]}
+                index={currentIndex}
+                total={REELS.length}
+                isActive={isActive}
+                muted={muted}
+                onMuteToggle={handleMuteToggle}
+              />
 
-              <motion.div
-                initial={{ opacity: 0, x: 40 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true, margin: "-60px" }}
-                transition={{ duration: 0.75, delay: 0.12, ease: [0.22, 1, 0.36, 1] }}
-              >
-                <ProjectDetail reel={REELS[currentIndex]} index={currentIndex} />
-              </motion.div>
+              {/* horizontal dots (mobile only) */}
+              <div className="gs-dots-h">
+                {REELS.map((_, i) => (
+                  <button
+                    key={i}
+                    className={`gs-dot${i === currentIndex ? " active" : ""}`}
+                    onClick={() => scrollToReel(i)}
+                    aria-label={`Project ${i + 1}`}
+                  />
+                ))}
+              </div>
             </div>
 
-            <div className={`g-continue-nudge${isLastReel ? " show" : ""}`}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 5v14M19 12l-7 7-7-7" />
-              </svg>
-              Continue scrolling
+            {/* ── RIGHT: header + animated detail (CSS-hidden on mobile) ── */}
+            <div className="gs-right">
+              <div className="gs-eyebrow">
+                <div className="gs-eyebar" />
+                <span className="gs-eyetxt">Creative Reel · Gallery</span>
+              </div>
+              <h2 className="gs-section-h">
+                Work That<br /><em>Speaks Louder.</em>
+              </h2>
+              <div className="gs-divider" />
+              <ProjectDetail reel={REELS[currentIndex]} index={currentIndex} />
             </div>
 
           </div>
-        </section>
+        </div>
+      </div>
 
+      {/* footer */}
+      <div className="gs-footer">
+        <div className="gs-footer-inner">
+          <div className="gs-rule" />
+          <span className="gs-tagline">Where craft meets intention.</span>
+          <div className="gs-rule" />
+        </div>
       </div>
     </>
   );
