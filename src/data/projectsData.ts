@@ -55,7 +55,7 @@ export const KRIOSK_PROJECTS: KrioskProject[] = [
         images: [
           `/rang-decor/14.png`,
           `/rang-decor/15.png`,
-          `/rang-decor/16.jpg`,
+          `/rang-decor/16.png`,
         ],
         description: "Brand Logo | Brand Association | Brand Awarness",
       },
@@ -282,9 +282,9 @@ export const KRIOSK_PROJECTS: KrioskProject[] = [
         title: "Brand Identity",
         items: ["Brand Logo", "Brand Association", "Brand Awareness"],
         images: [
-          `/komal-health-care/brand-1.jpg`,
-          `/komal-health-care/brand-2.jpg`,
-          `/komal-health-care/brand-3.jpg`,
+          `/komal-health-care/1.jpg`,
+          `/komal-health-care/2.jpg`,
+          `/komal-health-care/3.jpg`,
         ],
         description:
           "The Bellano brand identity was built around contemporary elegance. The logo and visual system were meticulously crafted to communicate fashion-forward thinking while remaining timeless — a balance that positions Bellano for long-term brand equity.",
@@ -293,9 +293,9 @@ export const KRIOSK_PROJECTS: KrioskProject[] = [
         title: "Digital",
         items: ["Social Media", "Digital Campaigns"],
         images: [
-          `/komal-health-care/digital-1.jpg`,
-          `/komal-health-care/digital-2.jpg`,
-          `/komal-health-care/digital-3.jpg`,
+          `/komal-health-care/4.jpg`,
+          `/komal-health-care/5.jpg`,
+          `/komal-health-care/6.jpg`,
         ],
         description:
           "Bellano's digital strategy focused on building a community of fashion enthusiasts. Social media content was curated to drive engagement and brand aspirations, while digital campaigns converted awareness into meaningful sales.",
@@ -321,7 +321,7 @@ export const KRIOSK_PROJECTS: KrioskProject[] = [
         title: "Advertising",
         items: ["Catalogue Design", "Corporate Advertising"],
         images: [
-          `/skylite-industries/Catlog/Jpge/advertising-1.jpg`,
+          `/skylite-industries/100.png`,
           `/skylite-industries/Catlog/Jpge/advertising-2.jpg`,
           `/skylite-industries/Catlog/Jpge/advertising-3.jpg`,
         ],
