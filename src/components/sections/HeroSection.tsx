@@ -270,34 +270,32 @@ export default function HeroSection() {
   transition={{ duration: 1.0, delay: 0.3 }}
 >
   <div
-  style={{
-    width: "min(300px, 72vw)",
-    aspectRatio: "9 / 14",                     // original
-    position: "relative",
-    borderRadius: "12px 80px 12px 80px",       // original
-    overflow: "hidden",
-    background: "#000",                        // NEW: fills the empty space around the video
-    boxShadow:
-      "0 32px 80px rgba(0,0,0,0.18), 0 8px 24px rgba(0,0,0,0.10)",
-  }}
->
-  <video
-    ref={videoRef}
-    muted
-    autoPlay
-    loop
-    playsInline
-    preload="auto"
     style={{
-      width: "100%",
-      height: "100%",
-      objectFit: "contain",                    // CHANGED (was "cover")
-      objectPosition: "center center",
-      transform: "scale(0.9)",                 // NEW: pulls the video away from the curved corners
+      width: "min(300px, 72vw)",
+      aspectRatio: "9 / 16",                       // CHANGED (was 9 / 14)
+      position: "relative",
+      borderRadius: "12px 36px 12px 36px",         // CHANGED (was 12px 80px 12px 80px)
+      overflow: "hidden",
+      boxShadow:
+        "0 32px 80px rgba(0,0,0,0.18), 0 8px 24px rgba(0,0,0,0.10)",
     }}
   >
-    <source src="/videos/Branding_Video_2.mp4" type="video/mp4" />
-  </video>
+    <video
+      ref={videoRef}
+      muted
+      autoPlay
+      loop
+      playsInline
+      preload="auto"
+      style={{
+        width: "100%",
+        height: "100%",
+        objectFit: "cover",
+        objectPosition: "center top",              // CHANGED (was center center)
+      }}
+    >
+      <source src="/videos/Branding_Video_2.mp4" type="video/mp4" />
+    </video>
 
     {/* Gradient overlay */}
     <div
