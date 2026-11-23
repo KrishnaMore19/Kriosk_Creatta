@@ -293,7 +293,7 @@ export default function HeroSection() {
                 objectPosition: "center center",
               }}
             >
-              <source src="/videos/Branding_Video_1.mp4" type="video/mp4" />
+              <source src="/videos/Branding_Video_2.mp4" type="video/mp4" />
             </video>
 
             {/* Gradient overlay */}

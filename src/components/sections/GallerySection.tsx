@@ -12,12 +12,12 @@ interface Reel {
 }
 
 const REELS: Reel[] = [
-  { id: 1, src: "/KrioskCreta.video/1.mp4", poster: "https://picsum.photos/seed/kr1/400/711", title: "Brand Identity",   client: "Reliance Foods", tag: "Branding"  },
-  { id: 2, src: "/KrioskCreta.video/2.mp4", poster: "https://picsum.photos/seed/kr2/400/711", title: "Digital Campaign", client: "ADA Developers",  tag: "Digital"   },
-  { id: 3, src: "/KrioskCreta.video/3.mp4", poster: "https://picsum.photos/seed/kr3/400/711", title: "Motion Design",    client: "Veda Naturals",   tag: "Motion"    },
-  { id: 4, src: "/KrioskCreta.video/4.mp4", poster: "https://picsum.photos/seed/kr4/400/711", title: "Packaging Reveal", client: "Tatva Hotels",    tag: "Packaging" },
-  { id: 5, src: "/KrioskCreta.video/5.mp4", poster: "https://picsum.photos/seed/kr5/400/711", title: "Social Content",   client: "Zeal Fitness",    tag: "Social"    },
-  { id: 6, src: "/KrioskCreta.video/6.mp4", poster: "https://picsum.photos/seed/kr6/400/711", title: "Event Highlight",  client: "Fusion Events",   tag: "Events"    },
+  { id: 1, src: "/KrioskCreta.video/8.mp4", poster: "https://picsum.photos/seed/kr1/400/711", title: "Brand Identity",   client: "Reliance Foods", tag: "Branding"  },
+  { id: 2, src: "/KrioskCreta.video/9.mp4", poster: "https://picsum.photos/seed/kr2/400/711", title: "Digital Campaign", client: "ADA Developers",  tag: "Digital"   },
+  { id: 3, src: "/KrioskCreta.video/10.mp4", poster: "https://picsum.photos/seed/kr3/400/711", title: "Motion Design",    client: "Veda Naturals",   tag: "Motion"    },
+  { id: 4, src: "/KrioskCreta.video/20.mp4", poster: "https://picsum.photos/seed/kr4/400/711", title: "Packaging Reveal", client: "Tatva Hotels",    tag: "Packaging" },
+  { id: 5, src: "/KrioskCreta.video/12.mp4", poster: "https://picsum.photos/seed/kr5/400/711", title: "Social Content",   client: "Zeal Fitness",    tag: "Social"    },
+  { id: 6, src: "/KrioskCreta.video/13.mp4", poster: "https://picsum.photos/seed/kr6/400/711", title: "Event Highlight",  client: "Fusion Events",   tag: "Events"    },
 ];
 
 /* ── adjust if your navbar height differs ── */
