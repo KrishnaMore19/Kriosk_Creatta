@@ -262,91 +262,93 @@ export default function HeroSection() {
         </div>
 
         {/* RIGHT: Video */}
-        <motion.div
-          className="flex md:w-[45%] w-full items-center justify-center py-6 md:py-0 self-center"
-          initial={{ opacity: 0, x: 40 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 1.0, delay: 0.3 }}
-        >
-          <div
-            style={{
-              width: "min(300px, 72vw)",
-              aspectRatio: "9 / 14",
-              position: "relative",
-              borderRadius: "12px 80px 12px 80px",
-              overflow: "hidden",
-              boxShadow:
-                "0 32px 80px rgba(0,0,0,0.18), 0 8px 24px rgba(0,0,0,0.10)",
-            }}
-          >
-            <video
-              ref={videoRef}
-              muted
-              autoPlay
-              loop
-              playsInline
-              preload="auto"
-              style={{
-                width: "100%",
-                height: "100%",
-                objectFit: "cover",
-                objectPosition: "center center",
-              }}
-            >
-              <source src="/videos/Branding_Video_2.mp4" type="video/mp4" />
-            </video>
+        {/* RIGHT: Video */}
+<motion.div
+  className="flex md:w-[45%] w-full items-center justify-center py-6 md:py-0 self-center"
+  initial={{ opacity: 0, x: 40 }}
+  animate={{ opacity: 1, x: 0 }}
+  transition={{ duration: 1.0, delay: 0.3 }}
+>
+  <div
+  style={{
+    width: "min(300px, 72vw)",
+    aspectRatio: "9 / 14",                     // original
+    position: "relative",
+    borderRadius: "12px 80px 12px 80px",       // original
+    overflow: "hidden",
+    background: "#000",                        // NEW: fills the empty space around the video
+    boxShadow:
+      "0 32px 80px rgba(0,0,0,0.18), 0 8px 24px rgba(0,0,0,0.10)",
+  }}
+>
+  <video
+    ref={videoRef}
+    muted
+    autoPlay
+    loop
+    playsInline
+    preload="auto"
+    style={{
+      width: "100%",
+      height: "100%",
+      objectFit: "contain",                    // CHANGED (was "cover")
+      objectPosition: "center center",
+      transform: "scale(0.9)",                 // NEW: pulls the video away from the curved corners
+    }}
+  >
+    <source src="/videos/Branding_Video_2.mp4" type="video/mp4" />
+  </video>
 
-            {/* Gradient overlay */}
-            <div
-              style={{
-                position: "absolute",
-                bottom: 0,
-                left: 0,
-                right: 0,
-                height: "80px",
-                background:
-                  "linear-gradient(to top, rgba(0,0,0,0.35), transparent)",
-                pointerEvents: "none",
-              }}
-            />
+    {/* Gradient overlay */}
+    <div
+      style={{
+        position: "absolute",
+        bottom: 0,
+        left: 0,
+        right: 0,
+        height: "80px",
+        background: "linear-gradient(to top, rgba(0,0,0,0.35), transparent)",
+        pointerEvents: "none",
+      }}
+    />
 
-            {/* Mute toggle button */}
-            <button
-              onClick={toggleMute}
-              aria-label={muted ? "Unmute video" : "Mute video"}
-              style={{
-                position: "absolute",
-                bottom: "16px",
-                right: "20px",
-                zIndex: 10,
-                width: "36px",
-                height: "36px",
-                borderRadius: "50%",
-                background: "rgba(0,0,0,0.4)",
-                backdropFilter: "blur(6px)",
-                border: "none",
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "white",
-              }}
-            >
-              {muted ? (
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
-                  <line x1="23" y1="9" x2="17" y2="15" />
-                  <line x1="17" y1="9" x2="23" y2="15" />
-                </svg>
-              ) : (
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
-                  <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07" />
-                </svg>
-              )}
-            </button>
-          </div>
-        </motion.div>
+    {/* Mute toggle button */}
+    <button
+      onClick={toggleMute}
+      aria-label={muted ? "Unmute video" : "Mute video"}
+      style={{
+        position: "absolute",
+        bottom: "16px",
+        right: "20px",
+        zIndex: 10,
+        width: "36px",
+        height: "36px",
+        borderRadius: "50%",
+        background: "rgba(0,0,0,0.4)",
+        backdropFilter: "blur(6px)",
+        border: "none",
+        cursor: "pointer",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        color: "white",
+      }}
+    >
+      {muted ? (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+          <line x1="23" y1="9" x2="17" y2="15" />
+          <line x1="17" y1="9" x2="23" y2="15" />
+        </svg>
+      ) : (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+          <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07" />
+        </svg>
+      )}
+    </button>
+  </div>
+</motion.div>
       </div>
     </motion.section>
   );
